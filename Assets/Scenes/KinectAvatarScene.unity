@@ -949,19 +949,19 @@ PrefabInstance:
   serializedVersion: 2
   m_Modification:
     serializedVersion: 3
-    m_TransformParent: {fileID: 1262052231}
+    m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: 6598815579406187027, guid: 18ddb545287c546e19cc77dc9fbb2189, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.62115
+      value: -0.72938
       objectReference: {fileID: 0}
     - target: {fileID: 6598815579406187027, guid: 18ddb545287c546e19cc77dc9fbb2189, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1.3433901
+      value: 2.7
       objectReference: {fileID: 0}
     - target: {fileID: 6598815579406187027, guid: 18ddb545287c546e19cc77dc9fbb2189, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 8.0272
+      value: 0.69384956
       objectReference: {fileID: 0}
     - target: {fileID: 6598815579406187027, guid: 18ddb545287c546e19cc77dc9fbb2189, type: 3}
       propertyPath: m_LocalRotation.w
@@ -1128,7 +1128,6 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1449779020}
-  - {fileID: 1300054193}
   - {fileID: 1595965948}
   - {fileID: 1696424219}
   - {fileID: 760081941}
@@ -1184,11 +1183,6 @@ CapsuleCollider:
   m_Height: 1
   m_Direction: 1
   m_Center: {x: 0, y: 0, z: 0}
---- !u!4 &1300054193 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 6598815579406187027, guid: 18ddb545287c546e19cc77dc9fbb2189, type: 3}
-  m_PrefabInstance: {fileID: 1036786024}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1310298096
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1953,7 +1947,7 @@ GameObject:
   - component: {fileID: 1806590985}
   m_Layer: 0
   m_Name: Avatar Camera
-  m_TagString: MainCamera
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -2009,7 +2003,7 @@ AudioListener:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1806590984}
-  m_Enabled: 1
+  m_Enabled: 0
 --- !u!20 &1806590987
 Camera:
   m_ObjectHideFlags: 0
@@ -4484,6 +4478,7 @@ SceneRoots:
   - {fileID: 6140488902814369571}
   - {fileID: 1497623484}
   - {fileID: 130009823}
+  - {fileID: 1036786024}
   - {fileID: 1262052231}
   - {fileID: 1791645141}
   - {fileID: 1740465122}
