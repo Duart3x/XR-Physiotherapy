@@ -4,29 +4,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Collections;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using UnityEngine;
-
-[Serializable]
-public class JointData
-{
-    // The kinect joint id (int) will translate to the JointType Skeleton enum (from package)
-    // Reference: https://github.com/bibigone/k4a.net/blob/master/K4AdotNet/BodyTracking/Skeleton.cs
-    public K4AdotNet.BodyTracking.JointType joint;
-    public Vector3 position;
-    public UnityEngine.Quaternion orientation;
-    public int confidence_level;
-}
-
-
-[Serializable]
-public class SkeletonData
-{
-    public int body_id;
-    public long timestamp;
-    public List<JointData> joints;
-}
 
 namespace K4AdotNet.Samples.Unity
 {
@@ -44,7 +22,7 @@ namespace K4AdotNet.Samples.Unity
         private Socket serverSocket;
         private Socket clientSocket;
         private const int BUFFER_SIZE = 4096;
-        private const string HOST = "127.0.0.1";
+        private const string HOST = "10.182.54.240";
         private const int PORT = 8888;
         private string buffer = "";
         private int frameCount = 0;

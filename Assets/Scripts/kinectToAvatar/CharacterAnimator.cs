@@ -174,20 +174,41 @@ namespace K4AdotNet.Samples.Unity
 
         private void OnEnable()
         {
-            var skeletonProvider = FindObjectOfType<SkeletonProvider>();
+            // Support both SkeletonProvider (live tracking) and SkeletonProviderFromJson (static poses)
+            // First try to get providers on the same GameObject
+            var skeletonProvider = GetComponent<SkeletonProvider>();
+            var jsonProvider = GetComponent<SkeletonProviderFromJson>();
+
+            // If found on same GameObject, subscribe to them
             if (skeletonProvider != null)
             {
+                Debug.Log($"[CharacterAnimator] {gameObject.name} - Subscribing to SkeletonProvider on same GameObject");
                 skeletonProvider.SkeletonUpdated += SkeletonProvider_SkeletonUpdated;
             }
+
+            if (jsonProvider != null)
+            {
+                Debug.Log($"[CharacterAnimator] {gameObject.name} - Subscribing to SkeletonProviderFromJson on same GameObject");
+                jsonProvider.SkeletonUpdated += SkeletonProvider_SkeletonUpdated;
+            }
+
         }
 
         private void OnDisable()
         {
-            var skeletonProvider = FindObjectOfType<SkeletonProvider>();
+            // Unsubscribe from both provider types
+            var skeletonProvider = GetComponent<SkeletonProvider>();
             if (skeletonProvider != null)
             {
                 skeletonProvider.SkeletonUpdated -= SkeletonProvider_SkeletonUpdated;
             }
+
+            var jsonProvider = GetComponent<SkeletonProviderFromJson>();
+            if (jsonProvider != null)
+            {
+                jsonProvider.SkeletonUpdated -= SkeletonProvider_SkeletonUpdated;
+            }
+
         }
 
         private void SkeletonProvider_SkeletonUpdated(object sender, SkeletonEventArgs e)

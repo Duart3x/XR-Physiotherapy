@@ -31,7 +31,8 @@ namespace Outdated
         private Socket serverSocket;
         private Socket clientSocket;
         private const int BUFFER_SIZE = 4096;
-        private const string HOST = "127.0.0.1";
+        // get from ipconfig from the server running the kinect
+        private const string HOST = "10.182.54.240";
         private const int PORT = 8888;
         private Transform _rootJointTransform;
         private Animator animator;
