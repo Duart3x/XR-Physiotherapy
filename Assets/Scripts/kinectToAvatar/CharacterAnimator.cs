@@ -176,7 +176,7 @@ namespace K4AdotNet.Samples.Unity
         {
             // Support both SkeletonProvider (live tracking) and SkeletonProviderFromJson (static poses)
             // First try to get providers on the same GameObject
-            var skeletonProvider = GetComponent<SkeletonProvider>();
+            var skeletonProvider = GetComponentInParent<SkeletonProvider>();
             var jsonProvider = GetComponent<SkeletonProviderFromJson>();
 
             // If found on same GameObject, subscribe to them
@@ -197,7 +197,7 @@ namespace K4AdotNet.Samples.Unity
         private void OnDisable()
         {
             // Unsubscribe from both provider types
-            var skeletonProvider = GetComponent<SkeletonProvider>();
+            var skeletonProvider = GetComponentInParent<SkeletonProvider>();
             if (skeletonProvider != null)
             {
                 skeletonProvider.SkeletonUpdated -= SkeletonProvider_SkeletonUpdated;

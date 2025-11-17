@@ -142,19 +142,27 @@ namespace K4AdotNet.Samples.Unity
 
         private void OnEnable()
         {
-            var skeletonProvider = FindFirstObjectByType<SkeletonProvider>();
+            // Find the single SkeletonProvider in the scene (for live tracking)
+            var skeletonProvider = GetComponentInParent<SkeletonProvider>();
+            
             if (skeletonProvider != null)
             {
                 skeletonProvider.SkeletonUpdated += SkeletonProvider_SkeletonUpdated;
+                Debug.Log($"[SkeletonRenderer] {gameObject.name} - Subscribed to SkeletonProvider on {skeletonProvider.gameObject.name}");
+            }
+            else
+            {
+                Debug.LogWarning($"[SkeletonRenderer] {gameObject.name} - No SkeletonProvider found in scene!");
             }
         }
 
         private void OnDisable()
         {
-            var skeletonProvider = FindFirstObjectByType<SkeletonProvider>();
+            var skeletonProvider = GetComponentInParent<SkeletonProvider>();
             if (skeletonProvider != null)
             {
                 skeletonProvider.SkeletonUpdated -= SkeletonProvider_SkeletonUpdated;
+                Debug.Log($"[SkeletonRenderer] {gameObject.name} - Unsubscribed from SkeletonProvider");
             }
         }
 
