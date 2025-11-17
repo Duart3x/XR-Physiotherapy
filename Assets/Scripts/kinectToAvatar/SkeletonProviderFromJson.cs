@@ -49,17 +49,39 @@ namespace K4AdotNet.Samples.Unity
         {
             try
             {
-                string filePath = System.IO.Path.Combine(Application.dataPath, "Poses", fileName);
+                // Use StreamingAssets folder which works on all platforms including Android/Quest
+                string filePath = System.IO.Path.Combine(Application.streamingAssetsPath, "Poses", fileName);
+                
+                Debug.Log($"[SkeletonProviderFromJson] Attempting to load from: {filePath}");
 
+                string jsonContent = null;
+
+                // On Android, StreamingAssets are inside the APK and need special handling
+                #if UNITY_ANDROID && !UNITY_EDITOR
+                UnityEngine.Networking.UnityWebRequest www = UnityEngine.Networking.UnityWebRequest.Get(filePath);
+                www.SendWebRequest();
+                
+                // Wait for the request to complete
+                while (!www.isDone) { }
+                
+                if (www.result != UnityEngine.Networking.UnityWebRequest.Result.Success)
+                {
+                    Debug.LogError($"[SkeletonProviderFromJson] JSON file not found: {filePath}\nError: {www.error}");
+                    return;
+                }
+                
+                jsonContent = www.downloadHandler.text;
+                #else
+                // On other platforms (Editor, Standalone), use File.ReadAllText
                 if (!System.IO.File.Exists(filePath))
                 {
                     Debug.LogError($"[SkeletonProviderFromJson] JSON file not found: {filePath}");
                     return;
                 }
-
-                string jsonContent = System.IO.File.ReadAllText(filePath);
-                Debug.Log($"[SkeletonProviderFromJson] Loaded JSON file: {fileName}");
-
+                
+                jsonContent = System.IO.File.ReadAllText(filePath);
+                #endif
+                
                 // Parse the JSON using SkeletonData from SkeletonData.cs
                 SkeletonData skeletonData = JsonUtility.FromJson<SkeletonData>(jsonContent);
 
@@ -69,6 +91,7 @@ namespace K4AdotNet.Samples.Unity
                     return;
                 }
 
+                Debug.Log($"[SkeletonProviderFromJson] Loaded JSON file: {fileName}");
                 Debug.Log($"[SkeletonProviderFromJson] Parsed {skeletonData.joints.Count} joints from JSON");
 
                 // Convert to K4AdotNet Skeleton structure

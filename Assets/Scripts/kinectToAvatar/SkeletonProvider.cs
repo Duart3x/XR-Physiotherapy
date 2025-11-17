@@ -22,7 +22,7 @@ namespace K4AdotNet.Samples.Unity
         private Socket serverSocket;
         private Socket clientSocket;
         private const int BUFFER_SIZE = 4096;
-        private const string HOST = "10.182.54.240";
+        private readonly string HOST = GetLocalIPAddress();
         private const int PORT = 8888;
         private string buffer = "";
         private int frameCount = 0;
@@ -66,6 +66,39 @@ namespace K4AdotNet.Samples.Unity
             }
 
         }
+
+        // ----------------------------------
+        // GET ATTRIBUTED LOCAL IP ADDRESS |
+        // ----------------------------------
+        private static string GetLocalIPAddress()
+        {
+            var host = Dns.GetHostEntry(Dns.GetHostName());
+            string fallbackIp = "127.0.0.1";
+            foreach (var ip in host.AddressList)
+            {
+                // Use InterNetwork for IPv4
+                if (ip.AddressFamily != AddressFamily.InterNetwork)
+                {
+                    continue;
+                }
+
+                // Prefer Hotspot 10.X.X.X range
+                if (ip.ToString().StartsWith("10."))
+                {
+                    return ip.ToString();
+                }
+
+                fallbackIp = ip.ToString();
+            }
+
+            if (fallbackIp == "127.0.0.1")
+            {
+                Debug.LogWarning("No network adapters with an IPv4 address in the system! Defaulting to localhost.");
+            }
+
+            return fallbackIp;
+        }
+
 
         // ----------------------------------
         // SOCKET IMPLEMENTATION ADDED HERE |

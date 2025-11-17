@@ -30,7 +30,8 @@ namespace K4AdotNet.Samples.Unity
             //     yield break;
             // }
 
-            var skeletonProvider = FindObjectOfType<SkeletonProvider>();
+            var skeletonProvider = FindFirstObjectByType<SkeletonProvider>();
+            Debug.Log("[Application Controller] Found SkeletonProvider: " + (skeletonProvider != null));
             yield return new WaitUntil(() => skeletonProvider?.IsInitializationComplete != false);
             if (skeletonProvider?.IsAvailable != true)
             {

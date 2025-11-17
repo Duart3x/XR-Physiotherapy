@@ -3,6 +3,8 @@
 ## Overview
 This system allows you to display multiple avatars with different static poses loaded from JSON files, without affecting the existing live tracking system.
 
+The poses are saved into StreamingAssets folder in order to be accessible by the Meta Quest (DO NOT MOVE THEM).
+
 ## Components
 
 ### SkeletonProviderFromJson

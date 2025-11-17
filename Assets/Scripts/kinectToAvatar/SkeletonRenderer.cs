@@ -10,6 +10,7 @@ namespace K4AdotNet.Samples.Unity
     {
         private void Awake()
         {
+            Debug.Log("[SkeletonRenderer] Awake");
             _root = new GameObject();
             _root.name = "skeleton:root";
             _root.transform.parent = transform;
@@ -141,7 +142,7 @@ namespace K4AdotNet.Samples.Unity
 
         private void OnEnable()
         {
-            var skeletonProvider = FindObjectOfType<SkeletonProvider>();
+            var skeletonProvider = FindFirstObjectByType<SkeletonProvider>();
             if (skeletonProvider != null)
             {
                 skeletonProvider.SkeletonUpdated += SkeletonProvider_SkeletonUpdated;
@@ -150,7 +151,7 @@ namespace K4AdotNet.Samples.Unity
 
         private void OnDisable()
         {
-            var skeletonProvider = FindObjectOfType<SkeletonProvider>();
+            var skeletonProvider = FindFirstObjectByType<SkeletonProvider>();
             if (skeletonProvider != null)
             {
                 skeletonProvider.SkeletonUpdated -= SkeletonProvider_SkeletonUpdated;
