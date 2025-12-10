@@ -18,7 +18,7 @@ namespace K4AdotNet.Samples.Unity
         [Header("Visualization Settings")]
         public Color correctColor = Color.green;
         public Color errorColor = Color.red;
-        public float errorThreshold = 0.15f;
+        public float errorThreshold = 0.2f;
         
         // Internal state
         private Skeleton? userSkeleton;
