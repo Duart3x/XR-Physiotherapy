@@ -12,17 +12,18 @@ namespace K4AdotNet.Samples.Unity
     {
         public SkeletonProvider userSkeletonProvider;
         public SkeletonProviderFromJson targetSkeletonProvider;
+        public SkeletonRenderer skeletonRenderer;
         public Transform alignmentRoot; // Reference frame for drawing
         
         [Header("Visualization Settings")]
-        public float arrowWidth = 0.02f;
-        public Color arrowColor = Color.cyan;
-        public Material lineMaterial;
+        public Color correctColor = Color.green;
+        public Color errorColor = Color.red;
+        public float errorThreshold = 0.15f;
         
         // Internal state
         private Skeleton? userSkeleton;
         private Skeleton? targetSkeleton;
-        private Dictionary<JointType, GameObject> arrows = new Dictionary<JointType, GameObject>();
+        private List<JointType> monitoredJoints = new List<JointType>();
 
         private void Start()
         {
@@ -35,55 +36,37 @@ namespace K4AdotNet.Samples.Unity
             if (alignmentRoot == null && userSkeletonProvider != null)
                 alignmentRoot = userSkeletonProvider.transform.parent;
 
+            if (skeletonRenderer == null && userSkeletonProvider != null)
+                skeletonRenderer = userSkeletonProvider.GetComponentInChildren<SkeletonRenderer>();
+            if (skeletonRenderer == null)
+                skeletonRenderer = FindObjectOfType<SkeletonRenderer>();
+
             if (userSkeletonProvider != null)
                 userSkeletonProvider.SkeletonUpdated += (s, e) => userSkeleton = e.Skeleton;
             
             if (targetSkeletonProvider != null)
                 targetSkeletonProvider.SkeletonUpdated += (s, e) => targetSkeleton = e.Skeleton;
 
-            // Create arrows for key joints
-            CreateArrow(JointType.WristLeft);
-            CreateArrow(JointType.ElbowLeft);
-            CreateArrow(JointType.WristRight);
-            CreateArrow(JointType.ElbowRight);
-            CreateArrow(JointType.KneeLeft);
-            CreateArrow(JointType.AnkleLeft);
-            CreateArrow(JointType.KneeRight);
-            CreateArrow(JointType.AnkleRight);
-        }
-
-        private void CreateArrow(JointType joint)
-        {
-            GameObject arrow = new GameObject($"Arrow_{joint}");
-            arrow.transform.SetParent(transform);
-            LineRenderer lr = arrow.AddComponent<LineRenderer>();
-            lr.startWidth = arrowWidth;
-            lr.endWidth = 0.005f; // Tapered end
-            lr.positionCount = 2;
-            lr.useWorldSpace = true;
-            
-            if (lineMaterial != null)
-                lr.material = lineMaterial;
-            else
-            {
-                Shader shader = Shader.Find("Sprites/Default");
-                if (shader != null) lr.material = new Material(shader);
-            }
-            lr.material.color = arrowColor;
-            
-            arrows[joint] = arrow;
-            arrow.SetActive(false);
+            // Define joints to monitor
+            monitoredJoints.Add(JointType.WristLeft);
+            monitoredJoints.Add(JointType.ElbowLeft);
+            monitoredJoints.Add(JointType.WristRight);
+            monitoredJoints.Add(JointType.ElbowRight);
+            monitoredJoints.Add(JointType.KneeLeft);
+            monitoredJoints.Add(JointType.AnkleLeft);
+            monitoredJoints.Add(JointType.KneeRight);
+            monitoredJoints.Add(JointType.AnkleRight);
         }
 
         private void Update()
         {
-            if (userSkeleton.HasValue && targetSkeleton.HasValue)
+            if (userSkeleton.HasValue && targetSkeleton.HasValue && skeletonRenderer != null)
             {
-                UpdateArrows(userSkeleton.Value, targetSkeleton.Value);
+                CheckPose(userSkeleton.Value, targetSkeleton.Value);
             }
         }
 
-        private void UpdateArrows(Skeleton user, Skeleton target)
+        private void CheckPose(Skeleton user, Skeleton target)
         {
             // Assumption: Root (Pelvis) is the anchor.
             var userRootPos = ConvertPos(user[JointType.Pelvis].PositionMm);
@@ -91,12 +74,8 @@ namespace K4AdotNet.Samples.Unity
             
             var targetRootRot = ConvertRot(target[JointType.Pelvis].Orientation);
             
-            foreach (var kvp in arrows)
+            foreach (var joint in monitoredJoints)
             {
-                JointType joint = kvp.Key;
-                GameObject arrowObj = kvp.Value;
-                LineRenderer lr = arrowObj.GetComponent<LineRenderer>();
-                
                 Vector3 userJointPos = ConvertPos(user[joint].PositionMm);
                 Vector3 idealPos = CalculateIdealPosition(joint, user, target, userRootPos, userRootRot, targetRootRot);
                 
@@ -107,17 +86,15 @@ namespace K4AdotNet.Samples.Unity
                     idealPos = alignmentRoot.TransformPoint(idealPos);
                 }
 
-                if (Vector3.Distance(userJointPos, idealPos) > 0.05f) // Threshold
+                if (Vector3.Distance(userJointPos, idealPos) > errorThreshold) 
                 {
-                    arrowObj.SetActive(true);
-                    lr.SetPosition(0, userJointPos);
-                    lr.SetPosition(1, idealPos);
-                    lr.startColor = arrowColor;
-                    lr.endColor = arrowColor;
+                    skeletonRenderer.SetJointColor(joint, errorColor);
+                    skeletonRenderer.SetBoneColor(joint, errorColor);
                 }
                 else
                 {
-                    arrowObj.SetActive(false);
+                    skeletonRenderer.SetJointColor(joint, correctColor);
+                    skeletonRenderer.SetBoneColor(joint, correctColor);
                 }
             }
         }

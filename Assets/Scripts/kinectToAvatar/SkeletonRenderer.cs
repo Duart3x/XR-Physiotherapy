@@ -251,6 +251,35 @@ namespace K4AdotNet.Samples.Unity
             return 0.001f * new Vector3(pos.X, -pos.Y, pos.Z);
         }
 
+        public void SetJointColor(JointType joint, Color color)
+        {
+            if (_joints != null && _joints.ContainsKey(joint))
+            {
+                var renderer = _joints[joint].GetComponent<Renderer>();
+                if (renderer != null)
+                {
+                    renderer.material.color = color;
+                }
+            }
+        }
+
+        public void SetBoneColor(JointType childJoint, Color color)
+        {
+            if (_bones != null)
+            {
+                var bone = _bones.FirstOrDefault(b => b.ChildJoint == childJoint);
+                if (bone != null)
+                {
+                    // The bone geometry (Cylinder) is the child of the bone Transform
+                    var renderer = bone.Transform.GetChild(0).GetComponent<Renderer>();
+                    if (renderer != null)
+                    {
+                        renderer.material.color = color;
+                    }
+                }
+            }
+        }
+
         private void HideSkeleton()
         {
             _root.SetActive(false);
