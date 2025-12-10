@@ -18,6 +18,10 @@ namespace K4AdotNet.Samples.Unity
             _root.transform.localPosition = Vector3.zero;
             _root.SetActive(false);
 
+            // Find a safe shader for URP/Built-in that supports color
+            _shader = Shader.Find("Sprites/Default");
+            if (_shader == null) _shader = Shader.Find("Universal Render Pipeline/Unlit");
+
             CreateJoints();
             CreateBones();
             CreateHead();
@@ -29,15 +33,16 @@ namespace K4AdotNet.Samples.Unity
         private IReadOnlyDictionary<JointType, Transform> _joints;
         private IReadOnlyCollection<Bone> _bones;
         private Transform _head;
+        private Shader _shader;
 
         private class Bone
         {
-            public static Bone FromChildJoint(JointType childJoint)
+            public static Bone FromChildJoint(JointType childJoint, Shader shader)
             {
-                return new Bone(childJoint.GetParent(), childJoint);
+                return new Bone(childJoint.GetParent(), childJoint, shader);
             }
 
-            public Bone(JointType parentJoint, JointType childJoint)
+            public Bone(JointType parentJoint, JointType childJoint, Shader shader)
             {
                 ParentJoint = parentJoint;
                 ChildJoint = childJoint;
@@ -50,6 +55,11 @@ namespace K4AdotNet.Samples.Unity
                 bone.transform.parent = pos.transform;
                 bone.transform.localScale = new Vector3(0.033f, 0.5f, 0.033f);
                 bone.transform.localPosition = 0.5f * Vector3.up;
+
+                if (shader != null)
+                {
+                    bone.GetComponent<Renderer>().material = new Material(shader);
+                }
 
                 Transform = pos.transform;
             }
@@ -71,6 +81,12 @@ namespace K4AdotNet.Samples.Unity
                         joint.name = jt.ToString();
                         joint.transform.parent = _root.transform;
                         joint.transform.localScale = 0.075f * Vector3.one;
+                        
+                        if (_shader != null)
+                        {
+                            joint.GetComponent<Renderer>().material = new Material(_shader);
+                        }
+
                         return joint.transform;
                     });
 
@@ -121,17 +137,21 @@ namespace K4AdotNet.Samples.Unity
             }
         }
 
-        private static void CreateBones(ICollection<Bone> list, params JointType[] childJoints)
+        private void CreateBones(ICollection<Bone> list, params JointType[] childJoints)
         {
             foreach (var joint in childJoints)
             {
-                list.Add(Bone.FromChildJoint(joint));
+                list.Add(Bone.FromChildJoint(joint, _shader));
             }
         }
 
         private void CreateHead()
         {
             var head = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            if (_shader != null)
+            {
+                head.GetComponent<Renderer>().material = new Material(_shader);
+            }
             head.GetComponent<Renderer>().material.color = new Color(0.8f, 0.8f, 0.8f);
             head.transform.parent = _root.transform;
 
@@ -180,35 +200,40 @@ namespace K4AdotNet.Samples.Unity
 
         private void RenderSkeleton(Skeleton skeleton)
         {
+            // Calculate offset to anchor the skeleton to the Pelvis (making Pelvis local (0,0,0))
+            // This prevents the skeleton from moving around the space when the user walks,
+            // keeping it aligned ("directly above") the Avatar.
+            var offset = ConvertKinectPos(skeleton[JointType.Pelvis].PositionMm);
+
             foreach (var item in _joints)
             {
-                item.Value.localPosition = ConvertKinectPos(skeleton[item.Key].PositionMm);
+                item.Value.localPosition = ConvertKinectPos(skeleton[item.Key].PositionMm) - offset;
             }
 
             foreach (var bone in _bones)
             {
-                PositionBone(bone, skeleton);
+                PositionBone(bone, skeleton, offset);
             }
 
-            PositionHead(skeleton);
+            PositionHead(skeleton, offset);
 
             _root.SetActive(true);
         }
 
-        private static void PositionBone(Bone bone, Skeleton skeleton)
+        private static void PositionBone(Bone bone, Skeleton skeleton, Vector3 offset)
         {
-            var parentPos = ConvertKinectPos(skeleton[bone.ParentJoint].PositionMm);
-            var direction = ConvertKinectPos(skeleton[bone.ChildJoint].PositionMm) - parentPos;
+            var parentPos = ConvertKinectPos(skeleton[bone.ParentJoint].PositionMm) - offset;
+            var direction = (ConvertKinectPos(skeleton[bone.ChildJoint].PositionMm) - offset) - parentPos;
             bone.Transform.localPosition = parentPos;
             bone.Transform.localScale = new Vector3(1, direction.magnitude, 1);
             bone.Transform.localRotation = UnityEngine.Quaternion.FromToRotation(Vector3.up, direction);
         }
 
-        private void PositionHead(Skeleton skeleton)
+        private void PositionHead(Skeleton skeleton, Vector3 offset)
         {
-            var headPos = ConvertKinectPos(skeleton[JointType.Head].PositionMm);
-            var earPosR = ConvertKinectPos(skeleton[JointType.EarRight].PositionMm);
-            var earPosL = ConvertKinectPos(skeleton[JointType.EarLeft].PositionMm);
+            var headPos = ConvertKinectPos(skeleton[JointType.Head].PositionMm) - offset;
+            var earPosR = ConvertKinectPos(skeleton[JointType.EarRight].PositionMm) - offset;
+            var earPosL = ConvertKinectPos(skeleton[JointType.EarLeft].PositionMm) - offset;
             var headCenter = 0.5f * (earPosR + earPosL);
             var d = (earPosR - earPosL).magnitude;
             _head.localPosition = headCenter;

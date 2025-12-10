@@ -231,8 +231,8 @@ namespace K4AdotNet.Samples.Unity
             // Debug.Log($"MINE ANIMATOR Pelvis PositionMm (x, y, z): {skeleton.Pelvis.PositionMm.X}, {skeleton.Pelvis.PositionMm.Y}, {skeleton.Pelvis.PositionMm.Z}");
             // Debug.Log($"MINE ANIMATOR Pelvis Orientation (x, y, z, w): {skeleton.Pelvis.Orientation.X}, {skeleton.Pelvis.Orientation.Y}, {skeleton.Pelvis.Orientation.Z}, {skeleton.Pelvis.Orientation.W}");
             // Debug.Log($"MINE ANIMATOR Type Quaternion: {skeleton.Pelvis.Orientation.GetType()}");
-            var characterPos = ConvertKinectPos(skeleton.Pelvis.PositionMm);
-            transform.localPosition = characterPos;
+            // var characterPos = ConvertKinectPos(skeleton.Pelvis.PositionMm);
+            // transform.localPosition = characterPos;
 
             foreach (var joint in joints)
             {
