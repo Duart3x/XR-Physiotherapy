@@ -9,7 +9,7 @@ using UnityEngine;
 namespace K4AdotNet.Samples.Unity
 {
 
-    public class SkeletonProvider : MonoBehaviour, IInitializable
+    public class SkeletonProvider : MonoBehaviour, IInitializable, ISkeletonProvider
     {
         // ----------------------------------------------
         // CHANGES REGARDING ORIGINAL SKELETON PROVIDER | 

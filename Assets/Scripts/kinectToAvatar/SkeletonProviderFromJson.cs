@@ -10,7 +10,7 @@ namespace K4AdotNet.Samples.Unity
     /// This allows multiple avatars to load different poses from different files.
     /// Uses the shared SkeletonData structures from SkeletonData.cs
     /// </summary>
-    public class SkeletonProviderFromJson : MonoBehaviour
+    public class SkeletonProviderFromJson : MonoBehaviour, ISkeletonProvider
     {
         [Header("JSON File Settings")]
         [Tooltip("Name of the JSON file in the Poses folder (e.g., 'frontal_lunge_arms_up.json')")]

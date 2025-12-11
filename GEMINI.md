@@ -1,39 +1,48 @@
 ## Project Overview
 
-This is a Unity project that demonstrates how to use the Azure Kinect DK to capture body tracking data and animate a 3D character in real-time. The project is set up to work with the Azure Kinect Body Tracking SDK and includes scripts for capturing, processing, and rendering the skeleton data.
+This is a Unity project (XR-Physiotherapy) that demonstrates how to use body tracking data (originally from Azure Kinect, now via TCP socket) to animate a 3D character in real-time and provide feedback on rehabilitation exercises. The project is set up to work with the K4AdotNet library and includes scripts for processing and rendering skeleton data.
 
-The core of the project lies in the `Assets/Scripts/kinectToAvatar` directory, which contains the C# scripts responsible for the following:
+The core of the project lies in the `Assets/Scripts` directory, organized as follows:
 
-*   **Data Capture:** The `CaptureManager.cs` script is responsible for initializing the Kinect sensor and capturing the body tracking data.
-*   **Skeleton Processing:** The `SkeletonProvider.cs` script processes the captured data to extract the skeleton information for each detected body.
-*   **Character Animation:** The `CharacterAnimator.cs` script takes the skeleton data and applies it to a 3D character model, animating it in real-time.
-*   **Exercise Manager:** The `ExerciseManager.cs` script compares the live user skeleton with a static target pose and visualizes the difference using arrows, guiding the user to match the pose.
+*   **Data Receiver (`SkeletonProvider.cs`):**  
+    Modified to act as a TCP Server. It receives JSON-formatted skeleton data from an external client (e.g., a Kinect sensor app), parses it, and fires events when the skeleton is updated. It no longer directly manages the Kinect hardware.
+    
+*   **Skeleton Visualization (`SkeletonRenderer.cs`):**  
+    Responsible for rendering the raw wireframe skeleton using Unity primitives (Spheres for joints, Cylinders for bones).
+    *   **Fixes:** Implements a shader fallback (`Sprites/Default` or `URP/Unlit`) to prevent "purple" rendering in builds. 
+    *   **Positioning:** Anchors the skeleton to the Pelvis (local 0,0,0) to keep it superimposed "directly above" the avatar, preventing it from moving around the world space as the user walks.
+    *   **API:** Provides public methods (`SetJointColor`, `SetBoneColor`) for external scripts to highlight specific body parts.
 
-The project also includes a sample scene `KinectAvatarScene.unity` that is set up with a character and the necessary scripts to get started.
+*   **Character Animation (`CharacterAnimator.cs`):**  
+    Takes the skeleton data and applies it to a standard Unity Humanoid avatar (like the "Robot Kyle" model), animating it in real-time. It maps Kinect joint data to Unity's HumanBodyBones.
+
+*   **Exercise Logic (`ExerciseManager.cs`):**  
+    Compares the live user skeleton (`SkeletonProvider`) with a recorded static target pose (`SkeletonProviderFromJson`).
+    *   **Feedback:** Monitors specific joints (Wrists, Elbows, Knees, Ankles). If the user's joint position deviates from the target beyond a threshold, the corresponding joint and bone on the `SkeletonRenderer` are colored **Red**. If correct, they turn **Green**.
 
 ## Building and Running
 
-To build and run this project, you will need to have the following installed:
+To build and run this project, you will need:
 
 *   Unity Hub
-*   Unity Editor (version 2020.3 or later)
-*   Azure Kinect SDK
-*   Azure Kinect Body Tracking SDK
+*   Unity Editor (Version compatible with the project, likely 2020.3+)
+*   Azure Kinect SDK / Body Tracking SDK (dependencies managed via `prepare.cmd` for K4AdotNet)
 
-Before opening the project in Unity for the first time, you must run the `prepare.cmd` script located in the root of the project. This script will copy the necessary files from the Azure Kinect Body Tracking SDK to the project's `Assets/Plugins/K4AdotNet` directory.
-
-```bash
-prepare.cmd
-```
-
-Once the preparation script has been run, you can open the project in the Unity Editor. The main scene to open is `Assets/Scenes/KinectAvatarScene.unity`.
-
-To run the project, simply press the "Play" button in the Unity Editor. The application will attempt to connect to the Azure Kinect sensor and, if successful, will start tracking and animating the character on the screen.
+**Setup:**
+1.  Run `prepare.cmd` in the root directory to copy necessary K4AdotNet plugins.
+2.  Open `Assets/Scenes/ArPassthroughScene.unity` (or `KinectAvatarScene.unity`).
+3.  Ensure an external client is sending skeleton JSON data to the local IP on Port `8888`.
 
 ## Development Conventions
 
-The project follows the standard C# and Unity development conventions. All scripts are located in the `Assets/Scripts` directory and are organized into subdirectories based on their functionality.
+*   **Scripts:** Located in `Assets/Scripts`.
+*   **Rendering:** The project uses the Universal Render Pipeline (URP).
+*   **Networking:** Skeleton data is received via standard .NET Sockets (TCP).
+*   **Coordinates:** Kinect coordinate systems are converted to Unity's coordinate system within the provider and renderer scripts (handling axis flips and scaling from millimeters to meters).
 
-The code is well-commented, and the class and method names are self-explanatory. The project also includes a `README.md` file with basic instructions on how to get started.
+## Recent Changes & Technical Notes
 
-There are no specific testing or contribution guidelines outlined in the project. However, the code is structured in a way that makes it easy to extend and modify. For example, you can easily create your own character and animate it by creating a new prefab and adding the `CharacterAnimator.cs` script to it.
+*   **10-Dec-2025:**
+    *   **SkeletonRenderer Update:** Fixed an issue where the procedural skeleton used the default material (causing pink/purple errors in builds). It now explicitly assigns a standard shader.
+    *   **Skeleton Alignment:** Modified `SkeletonRenderer` to remove absolute world positioning. It now subtracts the Pelvis offset, effectively locking the visualization to the Avatar's root for easier comparison.
+    *   **Visual Feedback:** Refactored `ExerciseManager` to remove the old "LineRenderer Arrow" system. Feedback is now provided directly on the skeleton wireframe by changing material colors (Red/Green) based on pose accuracy.

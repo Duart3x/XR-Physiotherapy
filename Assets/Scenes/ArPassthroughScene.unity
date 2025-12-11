@@ -847,6 +847,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: -927199367670048503, guid: 320b1c2af77554f99a1658df4a6d3d5c, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1309098081}
+    - targetCorrespondingSourceObject: {fileID: -927199367670048503, guid: 320b1c2af77554f99a1658df4a6d3d5c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1309098085}
   m_SourcePrefab: {fileID: 100100000, guid: 320b1c2af77554f99a1658df4a6d3d5c, type: 3}
 --- !u!1 &810622633
 GameObject:
@@ -1204,6 +1207,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 487bff4b68f67ab44a0c03e818cae4e7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::K4AdotNet.Samples.Unity.CharacterAnimator
+--- !u!114 &1309098085
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1309098079}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: efd3a56205d82be46b60d405d6092b5a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::K4AdotNet.Samples.Unity.SkeletonRenderer
+  skeletonColor: {r: 0.53, g: 0.81, b: 0.92, a: 1}
+  yRotation180: 1
+  offset: {x: 0, y: 0, z: 0}
 --- !u!1 &1372196606
 GameObject:
   m_ObjectHideFlags: 0
@@ -2029,6 +2047,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: efd3a56205d82be46b60d405d6092b5a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::K4AdotNet.Samples.Unity.SkeletonRenderer
+  skeletonColor: {r: 0.6, g: 0.8, b: 1, a: 1}
+  yRotation180: 0
+  offset: {x: 0, y: 0, z: 0}
 --- !u!1 &40631837002031685
 GameObject:
   m_ObjectHideFlags: 0
