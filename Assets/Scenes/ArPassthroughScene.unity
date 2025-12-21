@@ -144,7 +144,7 @@ Transform:
   m_GameObject: {fileID: 82407079}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
-  m_LocalPosition: {x: 0, y: 0, z: 2.99}
+  m_LocalPosition: {x: -0.95, y: 0, z: 2.99}
   m_LocalScale: {x: 1.5, y: 1.5, z: 1.5}
   m_ConstrainProportionsScale: 1
   m_Children:
@@ -1093,7 +1093,7 @@ MonoBehaviour:
   alignmentRoot: {fileID: 1879061860}
   correctColor: {r: 0, g: 1, b: 0, a: 1}
   errorColor: {r: 1, g: 0, b: 0, a: 1}
-  errorThreshold: 0.2
+  errorThreshold: 0.4
 --- !u!1 &1129552557
 GameObject:
   m_ObjectHideFlags: 0

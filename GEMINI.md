@@ -46,3 +46,11 @@ To build and run this project, you will need:
     *   **SkeletonRenderer Update:** Fixed an issue where the procedural skeleton used the default material (causing pink/purple errors in builds). It now explicitly assigns a standard shader.
     *   **Skeleton Alignment:** Modified `SkeletonRenderer` to remove absolute world positioning. It now subtracts the Pelvis offset, effectively locking the visualization to the Avatar's root for easier comparison.
     *   **Visual Feedback:** Refactored `ExerciseManager` to remove the old "LineRenderer Arrow" system. Feedback is now provided directly on the skeleton wireframe by changing material colors (Red/Green) based on pose accuracy.
+
+*   **11-Dec-2025:**
+    *   **Architecture:** Introduced `ISkeletonProvider` interface to standardize skeleton data access. Updated `SkeletonProvider` (Live) and `SkeletonProviderFromJson` (Static) to implement this interface.
+    *   **SkeletonRenderer Enhancements:** 
+        *   Decoupled from concrete provider classes; now depends on `ISkeletonProvider`.
+        *   Added `skeletonColor` field to allow inspector-based color customization (e.g., light blue for static target poses).
+        *   Added `yRotation180` and `offset` fields to allow manual adjustment of the visualization's orientation and position relative to the avatar.
+    *   **Scene Configuration:** Updated `ArPassthroughScene` to include a `SkeletonRenderer` for the static target pose (light blue, 180° rotated, slightly offset).
