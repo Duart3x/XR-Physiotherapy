@@ -1,0 +1,9 @@
+# Pose Manifest File
+# List all pose JSON files here (one per line)
+# This file is required for Android/Quest builds since we cannot enumerate files in StreamingAssets
+# Lines starting with # are comments
+
+frontal_lunge_arms_up.json
+guerreiro.json
+gato.json
+aviao.json
