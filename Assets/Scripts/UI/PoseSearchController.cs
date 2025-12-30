@@ -120,7 +120,7 @@ namespace Physical.Therapy.UI
 
             foreach (PoseMetadata pose in poses)
             {
-                GameObject cell = CreatePoseCell(pose.PoseName);
+                GameObject cell = CreatePoseCell(pose);
                 if (cell != null)
                 {
                     poseCells[pose.PoseName] = cell;
@@ -131,7 +131,7 @@ namespace Physical.Therapy.UI
         /// <summary>
         /// Creates a single pose cell. Override for custom cell creation.
         /// </summary>
-        protected virtual GameObject CreatePoseCell(string poseName)
+        protected virtual GameObject CreatePoseCell(PoseMetadata pose)
         {
             GameObject cell;
 
@@ -146,13 +146,16 @@ namespace Physical.Therapy.UI
                 cell = CreateDefaultCell();
             }
 
-            cell.name = $"PoseCell_{poseName}";
+            cell.name = $"PoseCell_{pose.PoseName}";
 
             // Set up the cell's display text
-            SetCellText(cell, PoseService.GetDisplayName(poseName));
+            SetCellText(cell, PoseService.GetDisplayName(pose.PoseName));
+
+            // Set up the cell's icon sprite
+            SetCellIcon(cell, pose);
 
             // Set up click handler
-            SetCellClickHandler(cell, poseName);
+            SetCellClickHandler(cell, pose.PoseName);
 
             return cell;
         }
@@ -265,6 +268,57 @@ namespace Physical.Therapy.UI
             }
 
             Debug.LogWarning($"[PoseSearchController] Could not find text component on cell '{cell.name}' to set text '{text}'");
+        }
+
+        /// <summary>
+        /// Sets the icon sprite on a cell.
+        /// Searches for Image components by common icon names to support various prefab structures.
+        /// </summary>
+        private void SetCellIcon(GameObject cell, PoseMetadata pose)
+        {
+            if (poseService == null) return;
+
+            Sprite iconSprite = poseService.GetIconSprite(pose);
+            if (iconSprite == null)
+            {
+                Debug.Log($"[PoseSearchController] No icon sprite for pose '{pose.PoseName}'");
+                return;
+            }
+
+            // Try to find icon Image component by common names
+            string[] iconNames = { "Icon", "Image", "Thumbnail", "PoseIcon", "IconImage", "Sprite" };
+
+            foreach (string iconName in iconNames)
+            {
+                Transform iconTransform = cell.transform.Find(iconName);
+                if (iconTransform != null)
+                {
+                    Image image = iconTransform.GetComponent<Image>();
+                    if (image != null)
+                    {
+                        image.sprite = iconSprite;
+                        Debug.Log($"[PoseSearchController] Set icon sprite for '{pose.PoseName}' on {iconName} with sprite '{iconSprite.name}'");
+                        return;
+                    }
+                }
+            }
+
+            // Fallback: search all children for Image components (skip the background)
+            Image[] images = cell.GetComponentsInChildren<Image>(true);
+            foreach (Image image in images)
+            {
+                // Skip if this is likely the background (same GameObject as cell or named "Background")
+                if (image.gameObject == cell) continue;
+                if (image.gameObject.name.ToLower().Contains("background")) continue;
+                if (image.gameObject.name.ToLower().Contains("bg")) continue;
+
+                // Found a candidate image component
+                image.sprite = iconSprite;
+                Debug.Log($"[PoseSearchController] Set icon sprite for '{pose.PoseName}' on {image.gameObject.name} with sprite '{iconSprite.name}' (fallback)");
+                return;
+            }
+
+            Debug.LogWarning($"[PoseSearchController] Could not find icon Image component on cell '{cell.name}'");
         }
 
         /// <summary>

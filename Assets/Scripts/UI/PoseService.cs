@@ -13,13 +13,14 @@ namespace Physical.Therapy.UI
     /// </summary>
     public class PoseService : MonoBehaviour
     {
+        [Header("Folder Paths Streaming Assets")]
+        [Tooltip("Subfolder within StreamingAssets containing pose json files")]
+        public string posesJsonFolder = "Poses";
+
+        [Tooltip("Subfolder within Resources containing pose icon sprites")]
+        public string iconsResourceFolder = "Icons";
+
         [Header("Settings")]
-        [Tooltip("Subfolder within StreamingAssets containing pose files")]
-        public string posesFolder = "Poses";
-
-        [Tooltip("Subfolder within StreamingAssets containing pose icons")]
-        public string iconsFolder = "Poses/Icons";
-
         [Tooltip("Scan for poses automatically on Start")]
         public bool scanOnStart = true;
 
@@ -61,7 +62,7 @@ namespace Physical.Therapy.UI
             IsScanning = true;
             AvailablePoses.Clear();
 
-            string posesPath = Path.Combine(Application.streamingAssetsPath, posesFolder);
+            string posesPath = Path.Combine(Application.streamingAssetsPath, posesJsonFolder);
             Debug.Log($"[PoseService] Scanning for poses in: {posesPath}");
 
 #if UNITY_ANDROID && !UNITY_EDITOR
@@ -240,22 +241,47 @@ namespace Physical.Therapy.UI
         }
 
         /// <summary>
-        /// Get the full path to a pose's icon file
+        /// Load a sprite for a pose's icon from Resources folder.
+        /// Sprites should be placed in Assets/Resources/Icons/ (or the configured iconsResourceFolder).
         /// </summary>
-        public string GetIconPath(PoseMetadata pose)
+        public Sprite GetIconSprite(PoseMetadata pose)
         {
             if (pose == null || string.IsNullOrEmpty(pose.IconFileName))
                 return null;
 
-            return Path.Combine(Application.streamingAssetsPath, iconsFolder, pose.IconFileName);
+            return LoadSpriteByName(pose.IconFileName);
         }
 
         /// <summary>
-        /// Get the full path to the icons folder
+        /// Load a sprite by name from the Resources/Icons folder.
+        /// The name should be without file extension.
         /// </summary>
-        public string GetIconsFolderPath()
+        public Sprite LoadSpriteByName(string spriteName)
         {
-            return Path.Combine(Application.streamingAssetsPath, iconsFolder);
+            if (string.IsNullOrEmpty(spriteName))
+                return null;
+
+            // Remove file extension if present
+            string nameWithoutExtension = spriteName;
+            int extIndex = spriteName.LastIndexOf('.');
+            if (extIndex > 0)
+            {
+                nameWithoutExtension = spriteName.Substring(0, extIndex);
+            }
+
+            // Try loading from the configured icons folder within Resources
+            string resourcePath = string.IsNullOrEmpty(iconsResourceFolder)
+                ? nameWithoutExtension
+                : $"{iconsResourceFolder}/{nameWithoutExtension}";
+
+            Sprite sprite = Resources.Load<Sprite>(resourcePath);
+
+            if (sprite == null)
+            {
+                Debug.LogWarning($"[PoseService] Could not load sprite: {resourcePath}");
+            }
+
+            return sprite;
         }
 
         /// <summary>
