@@ -33,6 +33,11 @@ namespace Physical.Therapy.UI
         [Tooltip("Case-sensitive search")]
         public bool caseSensitive = false;
 
+        [Header("Filter References")]
+        [Tooltip("Default difficulty toggle to reset to when clearing filters")]
+        public Toggle defaultDifficultyToggle;
+
+
         /// <summary>
         /// Event fired when a pose is selected. Returns the pose name.
         /// </summary>
@@ -42,6 +47,7 @@ namespace Physical.Therapy.UI
         private Dictionary<string, GameObject> poseCells = new Dictionary<string, GameObject>();
         private string currentSearchQuery = "";
         private Difficulty currentDifficulty = Difficulty.None;
+
 
         private void Start()
         {
@@ -375,7 +381,9 @@ namespace Physical.Therapy.UI
                 searchInputField.text = "";
             }
             currentSearchQuery = "";
-            
+
+            currentDifficulty = Difficulty.None;
+            defaultDifficultyToggle.isOn = true;
 
             ApplySearchAndFilters();
         }

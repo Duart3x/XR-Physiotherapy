@@ -10,13 +10,13 @@ namespace Physical.Therapy.UI
     [Flags]
     public enum BodyArea
     {
-        Chest = 0,
-        Back = 1 << 1,
-        Arms = 1 << 2,
-        Abdominal = 1 << 3,
-        Legs = 1 << 4,
-        Shoulders = 1 << 5,
-        None = 1 << 6,
+        None = 0,
+        Chest = 1 << 1,
+        Back = 1 << 2,
+        Arms = 1 << 3,
+        Abdominal = 1 << 4,
+        Legs = 1 << 5,
+        Shoulders = 1 << 6,
     }
 
     /// <summary>
@@ -25,10 +25,10 @@ namespace Physical.Therapy.UI
     /// </summary>
     public enum Difficulty
     {
-        Easy = 0,
-        Medium = 1,
-        Hard = 2,
-        None = 3,
+        None = 0,
+        Easy = 1,
+        Medium = 2,
+        Hard = 3,
     }
 
     /// <summary>
@@ -166,7 +166,7 @@ namespace Physical.Therapy.UI
                 case "hard":
                     return Difficulty.Hard;
                 default:
-                    return Difficulty.Easy;
+                    return Difficulty.None;
             }
         }
     }
