@@ -23,6 +23,9 @@ namespace Physical.Therapy.UI
         public GameObject poseCellPrefab;
 
         [Header("Search Settings")]
+        [Tooltip("The search input field (optional - for clearing search text)")]
+        public TMP_InputField searchInputField;
+
         [Tooltip("Minimum characters before filtering (0 = filter immediately)")]
         public int minSearchLength = 0;
 
@@ -87,7 +90,7 @@ namespace Physical.Therapy.UI
         {
             Debug.Log($"[PoseSearchController] Creating cells for {poses.Count} poses");
             CreatePoseCells(poses);
-            FilterPoses(currentSearchQuery);
+            ApplySearchAndFilters();
         }
 
         /// <summary>
@@ -100,9 +103,6 @@ namespace Physical.Therapy.UI
                 Debug.LogError("[PoseSearchController] poseCellContainer is not assigned!");
                 return;
             }
-
-            // Clear existing cells
-            ClearPoseCells();
 
             foreach (string poseName in poses)
             {
@@ -141,6 +141,18 @@ namespace Physical.Therapy.UI
             SetCellClickHandler(cell, poseName);
 
             return cell;
+        }
+
+        /// <summary>
+        /// Called when a pose cell is clicked.
+        /// Fires the OnPoseSelected event - subscribe to this event from the K4AdotNet layer to load poses.
+        /// </summary>
+        public void SelectPose(string poseName)
+        {
+            Debug.Log($"[PoseSearchController] Pose selected: {poseName}");
+
+            // Fire event for external listeners (e.g., PoseLoadBridge in K4AdotNet namespace)
+            OnPoseSelected?.Invoke(poseName);
         }
 
         /// <summary>
@@ -264,18 +276,7 @@ namespace Physical.Therapy.UI
             }
         }
 
-        /// <summary>
-        /// Clears all existing pose cells
-        /// </summary>
-        public void ClearPoseCells()
-        {
-            foreach (var kvp in poseCells)
-            {
-                if (kvp.Value != null)
-                    Destroy(kvp.Value);
-            }
-            poseCells.Clear();
-        }
+        # region Search
 
         /// <summary>
         /// Call this from the SearchBar's InputField OnValueChanged event.
@@ -284,15 +285,27 @@ namespace Physical.Therapy.UI
         public void OnSearchValueChanged(string searchQuery)
         {
             currentSearchQuery = searchQuery ?? "";
-            FilterPoses(currentSearchQuery);
+            ApplySearchAndFilters();
         }
 
+        # endregion Search
+
+        # region Body Area Filter
+
+        # endregion Body Area Filter
+
+        # region Difficulty Filter
+
+        # endregion Difficulty Filter
+
+        # region Apply Search And Filters
+
         /// <summary>
-        /// Filters visible poses based on search query
+        /// Filters visible poses based on search query and filters
         /// </summary>
-        public void FilterPoses(string query)
+        public void ApplySearchAndFilters()
         {
-            string searchTerm = query.Trim();
+            string searchTerm = currentSearchQuery.Trim();
 
             // If search is too short, show all
             bool showAll = searchTerm.Length < minSearchLength;
@@ -326,41 +339,27 @@ namespace Physical.Therapy.UI
             }
         }
 
-        /// <summary>
-        /// Called when a pose cell is clicked.
-        /// Fires the OnPoseSelected event - subscribe to this event from the K4AdotNet layer to load poses.
-        /// </summary>
-        public void SelectPose(string poseName)
-        {
-            Debug.Log($"[PoseSearchController] Pose selected: {poseName}");
+        # endregion Apply Search And Filters
 
-            // Fire event for external listeners (e.g., PoseLoadBridge in K4AdotNet namespace)
-            OnPoseSelected?.Invoke(poseName);
-        }
+        # region Clear Everything
 
         /// <summary>
-        /// Refreshes the pose list (rescans and recreates cells)
+        /// Clears the search input and resets all filters
         /// </summary>
-        public void RefreshPoses()
+        public void OnClearSearchAndFilters()
         {
-            if (poseService != null)
+            // Clear search input
+            if (searchInputField != null)
             {
-                poseService.ScanForPoses();
+                searchInputField.text = "";
             }
+            currentSearchQuery = "";
+            
+
+            ApplySearchAndFilters();
         }
 
-        /// <summary>
-        /// Gets the current number of visible pose cells
-        /// </summary>
-        public int GetVisiblePoseCount()
-        {
-            int count = 0;
-            foreach (var kvp in poseCells)
-            {
-                if (kvp.Value != null && kvp.Value.activeSelf)
-                    count++;
-            }
-            return count;
-        }
+        # endregion Clear Everything
+
     }
 }
