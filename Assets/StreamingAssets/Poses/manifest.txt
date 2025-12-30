@@ -1,9 +1,20 @@
 # Pose Manifest File
-# List all pose JSON files here (one per line)
+# List all pose JSON files here with metadata
 # This file is required for Android/Quest builds since we cannot enumerate files in StreamingAssets
 # Lines starting with # are comments
+#
+# FORMAT: filename.json | body_area1,body_area2 | difficulty | description
+#
+# Body Areas: Chest, Back, Arms, Abdominal, Legs, Shoulders
+# Difficulty: Easy, Medium, Hard (or 1, 2, 3)
+#
+# Example: warrior_pose.json | Legs,Abdominal | Medium | Standing balance pose that strengthens legs
+#
+# Note: If you only provide the filename (old format), defaults will be used:
+#   - Body Area: None
+#   - Difficulty: Easy
 
-frontal_lunge_arms_up.json
-guerreiro.json
-gato.json
-aviao.json
+frontal_lunge_arms_up.json | image.png | Legs,Arms,Shoulders | Medium | Lunge position with arms raised over head
+guerreiro.json | image.png | Legs,Abdominal,Arms | Medium | Warrior pose for balance and strength
+gato.json | image.png | Abdominal,Back | Easy | Cat-cow stretch for spine flexibility
+aviao.json | image.png | Abdominal,Back,Arms | Hard | Airplane pose requiring balance and core stability

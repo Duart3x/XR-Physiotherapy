@@ -9,6 +9,7 @@ namespace Physical.Therapy.UI
 {
     /// <summary>
     /// Scans the StreamingAssets/Poses folder for available pose JSON files.
+    /// Loads pose metadata from manifest.txt including body areas, difficulty, and icon references.
     /// </summary>
     public class PoseService : MonoBehaviour
     {
@@ -16,18 +17,21 @@ namespace Physical.Therapy.UI
         [Tooltip("Subfolder within StreamingAssets containing pose files")]
         public string posesFolder = "Poses";
 
+        [Tooltip("Subfolder within StreamingAssets containing pose icons")]
+        public string iconsFolder = "Poses/Icons";
+
         [Tooltip("Scan for poses automatically on Start")]
         public bool scanOnStart = true;
 
         /// <summary>
-        /// Event fired when pose scanning is complete. Returns list of pose names (without .json extension).
+        /// Event fired when pose scanning is complete. Returns list of pose metadata.
         /// </summary>
-        public event Action<List<string>> OnPosesScanned;
+        public event Action<List<PoseMetadata>> OnPosesScanned;
 
         /// <summary>
-        /// List of discovered pose names (without .json extension)
+        /// List of discovered poses with metadata
         /// </summary>
-        public List<string> AvailablePoses { get; private set; } = new List<string>();
+        public List<PoseMetadata> AvailablePoses { get; private set; } = new List<PoseMetadata>();
 
         /// <summary>
         /// Whether scanning is currently in progress
@@ -70,7 +74,8 @@ namespace Physical.Therapy.UI
             yield return null;
 #endif
 
-            Debug.Log($"[PoseService] Found {AvailablePoses.Count} poses: {string.Join(", ", AvailablePoses)}");
+            var poseNames = AvailablePoses.ConvertAll(p => p.PoseName);
+            Debug.Log($"[PoseService] Found {AvailablePoses.Count} poses: {string.Join(", ", poseNames)}");
             IsScanning = false;
             OnPosesScanned?.Invoke(AvailablePoses);
         }
@@ -83,14 +88,27 @@ namespace Physical.Therapy.UI
                 return;
             }
 
-            string[] jsonFiles = Directory.GetFiles(posesPath, "*.json");
-            foreach (string filePath in jsonFiles)
+            // Try to load from manifest first
+            string manifestPath = Path.Combine(posesPath, "manifest.txt");
+            if (File.Exists(manifestPath))
             {
-                string fileName = Path.GetFileNameWithoutExtension(filePath);
-                AvailablePoses.Add(fileName);
+                Debug.Log($"[PoseService] Loading poses from manifest: {manifestPath}");
+                string[] lines = File.ReadAllLines(manifestPath);
+                ParseManifestLines(lines);
+            }
+            else
+            {
+                // Fallback: scan for .json files and create basic metadata
+                Debug.Log($"[PoseService] No manifest found, scanning for .json files");
+                string[] jsonFiles = Directory.GetFiles(posesPath, "*.json");
+                foreach (string filePath in jsonFiles)
+                {
+                    string fileName = Path.GetFileNameWithoutExtension(filePath);
+                    AvailablePoses.Add(new PoseMetadata(fileName, BodyArea.None, Difficulty.Easy));
+                }
             }
 
-            AvailablePoses.Sort();
+            AvailablePoses.Sort((a, b) => string.Compare(a.PoseName, b.PoseName, StringComparison.OrdinalIgnoreCase));
         }
 
         private IEnumerator ScanAndroidPoses(string posesPath)
@@ -104,21 +122,9 @@ namespace Physical.Therapy.UI
 
                 if (www.result == UnityWebRequest.Result.Success)
                 {
-                    // Parse manifest file (one pose name per line)
+                    // Parse manifest file with metadata
                     string[] lines = www.downloadHandler.text.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
-                    foreach (string line in lines)
-                    {
-                        string poseName = line.Trim();
-                        if (!string.IsNullOrEmpty(poseName) && !poseName.StartsWith("#"))
-                        {
-                            // Remove .json extension if present
-                            if (poseName.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
-                            {
-                                poseName = poseName.Substring(0, poseName.Length - 5);
-                            }
-                            AvailablePoses.Add(poseName);
-                        }
-                    }
+                    ParseManifestLines(lines);
                 }
                 else
                 {
@@ -127,7 +133,7 @@ namespace Physical.Therapy.UI
                 }
             }
 
-            AvailablePoses.Sort();
+            AvailablePoses.Sort((a, b) => string.Compare(a.PoseName, b.PoseName, StringComparison.OrdinalIgnoreCase));
         }
 
         private IEnumerator TryLoadKnownPoses(string posesPath)
@@ -151,9 +157,63 @@ namespace Physical.Therapy.UI
 
                     if (www.result == UnityWebRequest.Result.Success)
                     {
-                        AvailablePoses.Add(poseName);
+                        AvailablePoses.Add(new PoseMetadata(poseName, BodyArea.None, Difficulty.Easy));
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Parse manifest lines into PoseMetadata objects.
+        /// Format: filename.json | icon.png | body_areas | difficulty | description
+        /// </summary>
+        private void ParseManifestLines(string[] lines)
+        {
+            foreach (string line in lines)
+            {
+                string trimmedLine = line.Trim();
+                if (string.IsNullOrEmpty(trimmedLine) || trimmedLine.StartsWith("#"))
+                    continue;
+
+                // Split by pipe delimiter
+                string[] parts = trimmedLine.Split('|');
+
+                // Get pose name (required)
+                string poseName = parts[0].Trim();
+                if (poseName.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+                {
+                    poseName = poseName.Substring(0, poseName.Length - 5);
+                }
+
+                if (string.IsNullOrEmpty(poseName))
+                    continue;
+
+                // Parse based on number of parts
+                // Format: filename.json | icon.png | body_areas | difficulty | description
+                string iconFileName = "";
+                BodyArea bodyAreas = BodyArea.None;
+                Difficulty difficulty = Difficulty.Easy;
+                string description = "";
+
+                if (parts.Length >= 2)
+                {
+                    iconFileName = parts[1].Trim();
+                }
+                if (parts.Length >= 3)
+                {
+                    bodyAreas = PoseMetadata.ParseBodyAreas(parts[2].Trim());
+                }
+                if (parts.Length >= 4)
+                {
+                    difficulty = PoseMetadata.ParseDifficulty(parts[3].Trim());
+                }
+                if (parts.Length >= 5)
+                {
+                    description = parts[4].Trim();
+                }
+
+                AvailablePoses.Add(new PoseMetadata(poseName, bodyAreas, difficulty, description, iconFileName));
+                Debug.Log($"[PoseService] Loaded pose: {poseName}, Icon: {iconFileName}, Areas: {bodyAreas}, Difficulty: {difficulty}");
             }
         }
 
@@ -177,6 +237,34 @@ namespace Physical.Therapy.UI
 
             // Title case
             return System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(display.ToLower());
+        }
+
+        /// <summary>
+        /// Get the full path to a pose's icon file
+        /// </summary>
+        public string GetIconPath(PoseMetadata pose)
+        {
+            if (pose == null || string.IsNullOrEmpty(pose.IconFileName))
+                return null;
+
+            return Path.Combine(Application.streamingAssetsPath, iconsFolder, pose.IconFileName);
+        }
+
+        /// <summary>
+        /// Get the full path to the icons folder
+        /// </summary>
+        public string GetIconsFolderPath()
+        {
+            return Path.Combine(Application.streamingAssetsPath, iconsFolder);
+        }
+
+        /// <summary>
+        /// Find a pose by name
+        /// </summary>
+        public PoseMetadata GetPoseByName(string poseName)
+        {
+            return AvailablePoses.Find(p =>
+                string.Equals(p.PoseName, poseName, StringComparison.OrdinalIgnoreCase));
         }
     }
 }

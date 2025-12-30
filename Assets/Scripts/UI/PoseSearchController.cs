@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using Oculus.Interaction.Samples;
 
 namespace Physical.Therapy.UI
 {
@@ -40,6 +41,7 @@ namespace Physical.Therapy.UI
         // Internal tracking of pose cells
         private Dictionary<string, GameObject> poseCells = new Dictionary<string, GameObject>();
         private string currentSearchQuery = "";
+        private Difficulty currentDifficulty = Difficulty.None;
 
         private void Start()
         {
@@ -86,17 +88,19 @@ namespace Physical.Therapy.UI
         /// <summary>
         /// Called when PoseService finishes scanning. Creates cells for each pose.
         /// </summary>
-        private void OnPosesScanned(List<string> poses)
+        private void OnPosesScanned(List<PoseMetadata> poses)
         {
             Debug.Log($"[PoseSearchController] Creating cells for {poses.Count} poses");
             CreatePoseCells(poses);
+
+
             ApplySearchAndFilters();
         }
 
         /// <summary>
         /// Creates UI cells for each pose. Override this if you need custom cell creation.
         /// </summary>
-        protected virtual void CreatePoseCells(List<string> poses)
+        protected virtual void CreatePoseCells(List<PoseMetadata> poses)
         {
             if (poseCellContainer == null)
             {
@@ -104,12 +108,12 @@ namespace Physical.Therapy.UI
                 return;
             }
 
-            foreach (string poseName in poses)
+            foreach (PoseMetadata pose in poses)
             {
-                GameObject cell = CreatePoseCell(poseName);
+                GameObject cell = CreatePoseCell(pose.PoseName);
                 if (cell != null)
                 {
-                    poseCells[poseName] = cell;
+                    poseCells[pose.PoseName] = cell;
                 }
             }
         }
@@ -296,6 +300,13 @@ namespace Physical.Therapy.UI
 
         # region Difficulty Filter
 
+        public void OnDifficultyFilterChanged(int difficultyIndex)
+        {
+            Debug.Log($"[PoseSearchController] Difficulty filter changed: {difficultyIndex}");
+            currentDifficulty = (Difficulty) difficultyIndex;
+            ApplySearchAndFilters();
+        }
+
         # endregion Difficulty Filter
 
         # region Apply Search And Filters
@@ -305,6 +316,7 @@ namespace Physical.Therapy.UI
         /// </summary>
         public void ApplySearchAndFilters()
         {
+            Debug.Log($"[PoseSearchController] ApplySearchAndFilters: {{searchQuery='{currentSearchQuery}', difficulty={currentDifficulty}}}");
             string searchTerm = currentSearchQuery.Trim();
 
             // If search is too short, show all
@@ -333,6 +345,15 @@ namespace Physical.Therapy.UI
                     string displayToSearch = caseSensitive ? displayName : displayName.ToLower();
 
                     shouldShow = nameToSearch.Contains(termToFind) || displayToSearch.Contains(termToFind);
+                }
+
+                if (shouldShow && currentDifficulty != Difficulty.None)
+                {
+                    PoseMetadata metadata = poseService.GetPoseByName(poseName);
+                    if (metadata != null)
+                    {
+                        shouldShow = (metadata.Difficulty == currentDifficulty);
+                    }
                 }
 
                 cell.SetActive(shouldShow);
