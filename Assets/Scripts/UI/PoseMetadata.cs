@@ -13,8 +13,8 @@ namespace Physical.Therapy.UI
         None = 0,
         Chest = 1 << 1,
         Back = 1 << 2,
-        Arms = 1 << 3,
-        Abdominal = 1 << 4,
+        Abdominal = 1 << 3,
+        Arms = 1 << 4,
         Legs = 1 << 5,
         Shoulders = 1 << 6,
     }

@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using Oculus.Interaction.Samples;
+using Oculus.Interaction.Body.Input;
 
 namespace Physical.Therapy.UI
 {
@@ -37,6 +38,8 @@ namespace Physical.Therapy.UI
         [Tooltip("Default difficulty toggle to reset to when clearing filters")]
         public Toggle defaultDifficultyToggle;
 
+        [Tooltip("Default body area toggle to reset to when clearing filters")]
+        public Toggle defaultBodyAreaToggle;
 
         /// <summary>
         /// Event fired when a pose is selected. Returns the pose name.
@@ -47,6 +50,7 @@ namespace Physical.Therapy.UI
         private Dictionary<string, GameObject> poseCells = new Dictionary<string, GameObject>();
         private string currentSearchQuery = "";
         private Difficulty currentDifficulty = Difficulty.None;
+        private BodyArea currentBodyArea = BodyArea.None;
 
 
         private void Start()
@@ -300,11 +304,7 @@ namespace Physical.Therapy.UI
 
         # endregion Search
 
-        # region Body Area Filter
-
-        # endregion Body Area Filter
-
-        # region Difficulty Filter
+        # region Body Area & Difficulty Filter Callbacks
 
         public void OnDifficultyFilterChanged(int difficultyIndex)
         {
@@ -313,7 +313,14 @@ namespace Physical.Therapy.UI
             ApplySearchAndFilters();
         }
 
-        # endregion Difficulty Filter
+        public void OnBodyAreaChanged(int bodyAreaIndex)
+        {
+            Debug.Log($"[PoseSearchController] Body area filter changed: {bodyAreaIndex}");
+            currentBodyArea = (BodyArea) (bodyAreaIndex == 0 ? bodyAreaIndex : 1 << bodyAreaIndex);
+            ApplySearchAndFilters();
+        }
+
+        # endregion Body Area & Difficulty Filter Callbacks
 
         # region Apply Search And Filters
 
@@ -322,7 +329,7 @@ namespace Physical.Therapy.UI
         /// </summary>
         public void ApplySearchAndFilters()
         {
-            Debug.Log($"[PoseSearchController] ApplySearchAndFilters: {{searchQuery='{currentSearchQuery}', difficulty={currentDifficulty}}}");
+            Debug.Log($"[PoseSearchController] ApplySearchAndFilters: {{searchQuery='{currentSearchQuery}', difficulty={currentDifficulty}, bodyArea={currentBodyArea}}}");
             string searchTerm = currentSearchQuery.Trim();
 
             // If search is too short, show all
@@ -362,6 +369,15 @@ namespace Physical.Therapy.UI
                     }
                 }
 
+                if (shouldShow && currentBodyArea != BodyArea.None)
+                {
+                    PoseMetadata metadata = poseService.GetPoseByName(poseName);
+                    if (metadata != null)
+                    {
+                        shouldShow = metadata.TargetsBodyArea(currentBodyArea);
+                    }
+                }
+
                 cell.SetActive(shouldShow);
             }
         }
@@ -384,6 +400,9 @@ namespace Physical.Therapy.UI
 
             currentDifficulty = Difficulty.None;
             defaultDifficultyToggle.isOn = true;
+
+            currentBodyArea = BodyArea.None;
+            defaultBodyAreaToggle.isOn = true;
 
             ApplySearchAndFilters();
         }
