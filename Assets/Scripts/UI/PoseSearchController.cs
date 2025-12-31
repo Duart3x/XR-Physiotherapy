@@ -33,6 +33,9 @@ namespace Physical.Therapy.UI
         [Tooltip("Enabled Play Button to actually experiment pose")]
         public GameObject enabledPlayPoseToggle;
 
+        [Tooltip("The Pause Button to pause the tracking for pose")]
+        public GameObject pausePoseToggle;
+
         [Header("Search Settings")]
         [Tooltip("The search input field (optional - for clearing search text)")]
         public TMP_InputField searchInputField;
@@ -65,6 +68,10 @@ namespace Physical.Therapy.UI
         private void Start()
         {
             Debug.Log("[PoseSearchController] Started");
+
+            disabledPlayPoseToggle.SetActive(true);
+            enabledPlayPoseToggle.SetActive(false);
+            pausePoseToggle.SetActive(false);
 
             if (poseService == null)
                 poseService = FindObjectOfType<PoseService>();
@@ -179,6 +186,7 @@ namespace Physical.Therapy.UI
 
             disabledPlayPoseToggle.SetActive(false);
             enabledPlayPoseToggle.SetActive(true);
+            pausePoseToggle.SetActive(false);
 
             // Fire event for external listeners (e.g., PoseLoadBridge in K4AdotNet namespace)
             OnPoseSelected?.Invoke(poseName);
@@ -194,6 +202,7 @@ namespace Physical.Therapy.UI
 
             disabledPlayPoseToggle.SetActive(true);
             enabledPlayPoseToggle.SetActive(false);
+            pausePoseToggle.SetActive(false);
 
             // Fire event with "CLEAR:poseName" to signal pose should be cleared
             OnPoseSelected?.Invoke($"CLEAR:{poseName}");
@@ -520,14 +529,31 @@ namespace Physical.Therapy.UI
 
         # endregion Clear Everything
 
-        # region Play Pose
+        # region Play Pause Pose
 
         public void OnPlayPose()
         {
-            Debug.Log("[PoseSearchController] Play Pose toggled");
+            Debug.Log("[PoseSearchController] Play Pose Tracking toggled");
+
+            disabledPlayPoseToggle.SetActive(false);
+            enabledPlayPoseToggle.SetActive(false);
+            pausePoseToggle.SetActive(true);
+
+            // Additional logic to turn on avatar tracking
         }
 
-        # endregion Play Pose
+        public void OnPausePose()
+        {
+            Debug.Log("[PoseSearchController] Pause Pose Tracking toggled");
+
+            disabledPlayPoseToggle.SetActive(false);
+            enabledPlayPoseToggle.SetActive(true);
+            pausePoseToggle.SetActive(false);
+
+            // Additional logic to pause avatar tracking
+        }
+
+        # endregion Play Pause Pose
 
     }
 }
