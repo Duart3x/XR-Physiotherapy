@@ -27,6 +27,9 @@ namespace Physical.Therapy.UI
         [Tooltip("Preview Pose Toggle Group")]
         public ToggleGroup previewPoseToggleGroup;
 
+        [Tooltip("Play Button to actually experiment Pose")]
+        public Toggle playPoseToggle;
+
         [Header("Search Settings")]
         [Tooltip("The search input field (optional - for clearing search text)")]
         public TMP_InputField searchInputField;
@@ -171,6 +174,9 @@ namespace Physical.Therapy.UI
         {
             Debug.Log($"[PoseSearchController] Pose selected: {poseName}");
 
+            playPoseToggle.transition = Selectable.Transition.Animation;
+            playPoseToggle.interactable = true;
+
             // Fire event for external listeners (e.g., PoseLoadBridge in K4AdotNet namespace)
             OnPoseSelected?.Invoke(poseName);
         }
@@ -182,6 +188,9 @@ namespace Physical.Therapy.UI
         public void ClearPose(string poseName)
         {
             Debug.Log($"[PoseSearchController] Attempting to clear pose: {poseName}");
+
+            playPoseToggle.transition = Selectable.Transition.ColorTint;
+            playPoseToggle.interactable = false;
 
             // Fire event with "CLEAR:poseName" to signal pose should be cleared
             OnPoseSelected?.Invoke($"CLEAR:{poseName}");
@@ -507,6 +516,15 @@ namespace Physical.Therapy.UI
         }
 
         # endregion Clear Everything
+
+        # region Play Pose
+
+        public void OnPlayPose()
+        {
+            Debug.Log("[PoseSearchController] Play Pose toggled");
+        }
+
+        # endregion Play Pose
 
     }
 }
