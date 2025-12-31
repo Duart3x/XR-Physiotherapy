@@ -31,6 +31,9 @@ namespace K4AdotNet.Samples.Unity
             if (loadOnStart)
             {
                 LoadPoseFromJson();
+            } else
+            {
+                ClearPose();
             }
         }
 
