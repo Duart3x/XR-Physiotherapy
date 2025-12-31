@@ -166,7 +166,7 @@ namespace Physical.Therapy.UI
 
         /// <summary>
         /// Parse manifest lines into PoseMetadata objects.
-        /// Format: filename.json | icon.png | body_areas | difficulty | description
+        /// Format: filename.json | icon1 | icon2 | body_areas | difficulty | description
         /// </summary>
         private void ParseManifestLines(string[] lines)
         {
@@ -190,8 +190,9 @@ namespace Physical.Therapy.UI
                     continue;
 
                 // Parse based on number of parts
-                // Format: filename.json | icon.png | body_areas | difficulty | description
+                // Format: filename.json | icon1 | icon2 | body_areas | difficulty | description
                 string iconFileName = "";
+                string secondIconFileName = "";
                 BodyArea bodyAreas = BodyArea.None;
                 Difficulty difficulty = Difficulty.Easy;
                 string description = "";
@@ -202,19 +203,23 @@ namespace Physical.Therapy.UI
                 }
                 if (parts.Length >= 3)
                 {
-                    bodyAreas = PoseMetadata.ParseBodyAreas(parts[2].Trim());
+                    secondIconFileName = parts[2].Trim();
                 }
                 if (parts.Length >= 4)
                 {
-                    difficulty = PoseMetadata.ParseDifficulty(parts[3].Trim());
+                    bodyAreas = PoseMetadata.ParseBodyAreas(parts[3].Trim());
                 }
                 if (parts.Length >= 5)
                 {
-                    description = parts[4].Trim();
+                    difficulty = PoseMetadata.ParseDifficulty(parts[4].Trim());
+                }
+                if (parts.Length >= 6)
+                {
+                    description = parts[5].Trim();
                 }
 
-                AvailablePoses.Add(new PoseMetadata(poseName, bodyAreas, difficulty, description, iconFileName));
-                Debug.Log($"[PoseService] Loaded pose: {poseName}, Icon: {iconFileName}, Areas: {bodyAreas}, Difficulty: {difficulty}");
+                AvailablePoses.Add(new PoseMetadata(poseName, bodyAreas, difficulty, description, iconFileName, secondIconFileName));
+                Debug.Log($"[PoseService] Loaded pose: {poseName}, Icon1: {iconFileName}, Icon2: {secondIconFileName}, Areas: {bodyAreas}, Difficulty: {difficulty}");
             }
         }
 

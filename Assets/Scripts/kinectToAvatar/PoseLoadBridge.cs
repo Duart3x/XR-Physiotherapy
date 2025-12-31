@@ -63,9 +63,29 @@ namespace K4AdotNet.Samples.Unity
         /// <summary>
         /// Handles the pose selection event from the UI layer.
         /// Loads the selected pose using SkeletonProviderFromJson.
+        /// If poseName starts with "CLEAR:", clears the pose only if it matches the currently loaded pose.
         /// </summary>
         private void HandlePoseSelected(string poseName)
         {
+            if (poseName.StartsWith("CLEAR:"))
+            {
+                // Extract the pose name being cleared
+                string poseBeingCleared = poseName.Substring(6); // Remove "CLEAR:" prefix
+                string fileNameBeingCleared = PoseService.GetPoseFileName(poseBeingCleared);
+
+                // Only clear if this is the currently loaded pose
+                if (skeletonProvider != null && skeletonProvider.CurrentPoseFileName == fileNameBeingCleared)
+                {
+                    Debug.Log($"[PoseLoadBridge] Clearing pose: {poseBeingCleared} (matches current: {skeletonProvider.CurrentPoseFileName})");
+                    ClearPose();
+                }
+                else
+                {
+                    Debug.Log($"[PoseLoadBridge] Ignoring clear for '{poseBeingCleared}' - not the current pose (current: {skeletonProvider?.CurrentPoseFileName})");
+                }
+                return;
+            }
+
             Debug.Log($"[PoseLoadBridge] Loading pose: {poseName}");
 
             if (skeletonProvider != null)

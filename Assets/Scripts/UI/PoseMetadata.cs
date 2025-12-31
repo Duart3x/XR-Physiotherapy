@@ -58,9 +58,16 @@ namespace Physical.Therapy.UI
         public string Description { get; set; }
 
         /// <summary>
-        /// Icon filename for this pose (relative to the icons folder)
+        /// First icon filename for this pose (relative to the icons folder)
+        /// Used for IconToSwitchByPoseImage
         /// </summary>
         public string IconFileName { get; set; }
+
+        /// <summary>
+        /// Second icon filename for this pose (relative to the icons folder)
+        /// Used for IconToSwitchByPoseIcon
+        /// </summary>
+        public string SecondIconFileName { get; set; }
 
         public PoseMetadata()
         {
@@ -69,15 +76,17 @@ namespace Physical.Therapy.UI
             Difficulty = Difficulty.Easy;
             Description = "";
             IconFileName = "";
+            SecondIconFileName = "";
         }
 
-        public PoseMetadata(string poseName, BodyArea bodyAreas, Difficulty difficulty, string description = "", string iconFileName = "")
+        public PoseMetadata(string poseName, BodyArea bodyAreas, Difficulty difficulty, string description = "", string iconFileName = "", string secondIconFileName = "")
         {
             PoseName = poseName;
             BodyAreas = bodyAreas;
             Difficulty = difficulty;
             Description = description;
             IconFileName = iconFileName;
+            SecondIconFileName = secondIconFileName;
         }
 
         /// <summary>

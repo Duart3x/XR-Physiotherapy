@@ -14,7 +14,7 @@
 #   - Body Area: None
 #   - Difficulty: Easy
 
-frontal_lunge_arms_up.json | Movement | Legs,Arms,Shoulders | Medium | Lunge position with arms raised over head
-guerreiro.json | person-yoga | Legs,Abdominal,Arms | Medium | Warrior pose for balance and strength
-gato.json | pose-icons | Abdominal,Back | Easy | Cat-cow stretch for spine flexibility
-aviao.json | person-yoga | Abdominal,Back,Arms | Hard | Airplane pose requiring balance and core stability
+frontal_lunge_arms_up.json | Movement | person-yoga | Legs,Arms,Shoulders | Medium | Lunge position with arms raised over head
+guerreiro.json | person-yoga | person-yoga | Legs,Abdominal,Arms | Medium | Warrior pose for balance and strength
+gato.json | pose-icons | person-yoga |Abdominal,Back | Easy | Cat-cow stretch for spine flexibility
+aviao.json | person-yoga | person-yoga | Abdominal,Back,Arms | Hard | Airplane pose requiring balance and core stability

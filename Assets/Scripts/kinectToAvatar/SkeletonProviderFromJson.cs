@@ -24,6 +24,7 @@ namespace K4AdotNet.Samples.Unity
 
         private Skeleton? _currentSkeleton;
         private bool _isLoaded = false;
+        private string _currentPoseFileName = "";
 
         void Start()
         {
@@ -98,6 +99,7 @@ namespace K4AdotNet.Samples.Unity
                 Skeleton skeleton = ConvertToSkeleton(skeletonData);
                 _currentSkeleton = skeleton;
                 _isLoaded = true;
+                _currentPoseFileName = fileName;
 
                 // Trigger the event to notify CharacterAnimator
                 OnSkeletonUpdated(skeleton);
@@ -148,6 +150,7 @@ namespace K4AdotNet.Samples.Unity
         {
             _currentSkeleton = null;
             _isLoaded = false;
+            _currentPoseFileName = "";
             SkeletonUpdated?.Invoke(this, new SkeletonEventArgs(null));
             Debug.Log("[SkeletonProviderFromJson] Pose cleared");
         }
@@ -161,5 +164,10 @@ namespace K4AdotNet.Samples.Unity
         /// Get the current skeleton
         /// </summary>
         public Skeleton? CurrentSkeleton => _currentSkeleton;
+
+        /// <summary>
+        /// Get the filename of the currently loaded pose
+        /// </summary>
+        public string CurrentPoseFileName => _currentPoseFileName;
     }
 }

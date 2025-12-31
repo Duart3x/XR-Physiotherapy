@@ -24,6 +24,9 @@ namespace Physical.Therapy.UI
         [Tooltip("Prefab for individual pose cells (optional - can create cells dynamically)")]
         public GameObject poseCellPrefab;
 
+        [Tooltip("Preview Pose Toggle Group")]
+        public ToggleGroup previewPoseToggleGroup;
+
         [Header("Search Settings")]
         [Tooltip("The search input field (optional - for clearing search text)")]
         public TMP_InputField searchInputField;
@@ -173,6 +176,18 @@ namespace Physical.Therapy.UI
         }
 
         /// <summary>
+        /// Clears the selected pose.
+        /// </summary>
+        /// <param name="poseName">The name of the pose being deselected</param>
+        public void ClearPose(string poseName)
+        {
+            Debug.Log($"[PoseSearchController] Attempting to clear pose: {poseName}");
+
+            // Fire event with "CLEAR:poseName" to signal pose should be cleared
+            OnPoseSelected?.Invoke($"CLEAR:{poseName}");
+        }
+
+        /// <summary>
         /// Creates a default cell if no prefab is assigned
         /// </summary>
         private GameObject CreateDefaultCell()
@@ -272,53 +287,80 @@ namespace Physical.Therapy.UI
 
         /// <summary>
         /// Sets the icon sprite on a cell.
-        /// Searches for Image components by common icon names to support various prefab structures.
+        /// Handles both the primary icon and secondary icon by searching for specific GameObject names.
         /// </summary>
         private void SetCellIcon(GameObject cell, PoseMetadata pose)
         {
             if (poseService == null) return;
 
-            Sprite iconSprite = poseService.GetIconSprite(pose);
-            if (iconSprite == null)
+            // Set first icon on "IconToSwitchByPoseImage"
+            if (!string.IsNullOrEmpty(pose.IconFileName))
             {
-                Debug.Log($"[PoseSearchController] No icon sprite for pose '{pose.PoseName}'");
-                return;
-            }
-
-            // Try to find icon Image component by common names
-            string[] iconNames = { "Icon", "Image", "Thumbnail", "PoseIcon", "IconImage", "Sprite" };
-
-            foreach (string iconName in iconNames)
-            {
-                Transform iconTransform = cell.transform.Find(iconName);
-                if (iconTransform != null)
+                Sprite firstIconSprite = poseService.LoadSpriteByName(pose.IconFileName);
+                if (firstIconSprite != null)
                 {
-                    Image image = iconTransform.GetComponent<Image>();
-                    if (image != null)
-                    {
-                        image.sprite = iconSprite;
-                        Debug.Log($"[PoseSearchController] Set icon sprite for '{pose.PoseName}' on {iconName} with sprite '{iconSprite.name}'");
-                        return;
-                    }
+                    SetSpriteOnNamedGameObject(cell, "IconToSwitchByPoseImage", firstIconSprite, pose.PoseName);
                 }
             }
 
-            // Fallback: search all children for Image components (skip the background)
-            Image[] images = cell.GetComponentsInChildren<Image>(true);
-            foreach (Image image in images)
+            // Set second icon on "IconToSwitchByPoseIcon"
+            if (!string.IsNullOrEmpty(pose.SecondIconFileName))
             {
-                // Skip if this is likely the background (same GameObject as cell or named "Background")
-                if (image.gameObject == cell) continue;
-                if (image.gameObject.name.ToLower().Contains("background")) continue;
-                if (image.gameObject.name.ToLower().Contains("bg")) continue;
+                Sprite secondIconSprite = poseService.LoadSpriteByName(pose.SecondIconFileName);
+                if (secondIconSprite != null)
+                {
+                    SetSpriteOnNamedGameObject(cell, "IconToSwitchByPoseIcon", secondIconSprite, pose.PoseName);
+                }
+            }
+        }
 
-                // Found a candidate image component
-                image.sprite = iconSprite;
-                Debug.Log($"[PoseSearchController] Set icon sprite for '{pose.PoseName}' on {image.gameObject.name} with sprite '{iconSprite.name}' (fallback)");
-                return;
+        /// <summary>
+        /// Sets a sprite on a specifically named GameObject within the cell hierarchy.
+        /// This method searches recursively through all children to find the target GameObject.
+        /// </summary>
+        private void SetSpriteOnNamedGameObject(GameObject cell, string targetName, Sprite sprite, string poseName)
+        {
+            // Search recursively for the named GameObject
+            Transform targetTransform = FindChildRecursive(cell.transform, targetName);
+
+            if (targetTransform != null)
+            {
+                Image image = targetTransform.GetComponent<Image>();
+                if (image != null)
+                {
+                    image.sprite = sprite;
+                    Debug.Log($"[PoseSearchController] Set sprite '{sprite.name}' on '{targetName}' for pose '{poseName}'");
+                }
+                else
+                {
+                    Debug.LogWarning($"[PoseSearchController] Found '{targetName}' but it has no Image component for pose '{poseName}'");
+                }
+            }
+            else
+            {
+                Debug.LogWarning($"[PoseSearchController] Could not find GameObject named '{targetName}' in cell '{cell.name}' for pose '{poseName}'");
+            }
+        }
+
+        /// <summary>
+        /// Recursively searches for a child Transform by name.
+        /// </summary>
+        private Transform FindChildRecursive(Transform parent, string name)
+        {
+            // Check direct children first
+            Transform result = parent.Find(name);
+            if (result != null)
+                return result;
+
+            // Recursively check all children
+            foreach (Transform child in parent)
+            {
+                result = FindChildRecursive(child, name);
+                if (result != null)
+                    return result;
             }
 
-            Debug.LogWarning($"[PoseSearchController] Could not find icon Image component on cell '{cell.name}'");
+            return null;
         }
 
         /// <summary>
@@ -326,20 +368,23 @@ namespace Physical.Therapy.UI
         /// </summary>
         private void SetCellClickHandler(GameObject cell, string poseName)
         {
-            Button button = cell.GetComponentInChildren<Button>();
-            if (button != null)
-            {
-                button.onClick.AddListener(() => SelectPose(poseName));
-                return;
-            }
-
             // Try Toggle
             Toggle toggle = cell.GetComponentInChildren<Toggle>();
             if (toggle != null)
             {
+                if (previewPoseToggleGroup != null) {
+                    toggle.group = previewPoseToggleGroup;
+                    Debug.Log($"[PoseSearchController] Assigned Toggle Group to toggle for pose '{poseName}' (Toggle Group: {previewPoseToggleGroup.name} == {toggle.group.name})");
+                } else {
+                    Debug.LogWarning($"[PoseSearchController] previewPoseToggleGroup is not assigned! Toggle for pose '{poseName}' will not be grouped.");
+                }
+
                 toggle.onValueChanged.AddListener((isOn) =>
                 {
-                    if (isOn) SelectPose(poseName);
+                    if (isOn)
+                        SelectPose(poseName);
+                    else
+                        ClearPose(poseName);
                 });
             }
         }
