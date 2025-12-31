@@ -20,6 +20,9 @@ namespace K4AdotNet.Samples.Unity
         [Tooltip("The SkeletonProviderFromJson that loads pose data")]
         public SkeletonProviderFromJson skeletonProvider;
 
+        [Tooltip("The ExerciseManager for pose verification and avatar control")]
+        public ExerciseManager exerciseManager;
+
         [Header("Settings")]
         [Tooltip("Automatically find references if not assigned")]
         public bool autoFindReferences = true;
@@ -33,13 +36,18 @@ namespace K4AdotNet.Samples.Unity
 
                 if (skeletonProvider == null)
                     skeletonProvider = FindObjectOfType<SkeletonProviderFromJson>();
+
+                if (exerciseManager == null)
+                    exerciseManager = FindObjectOfType<ExerciseManager>();
             }
 
             // Subscribe to UI events
             if (poseSearchController != null)
             {
                 poseSearchController.OnPoseSelected += HandlePoseSelected;
-                Debug.Log("[PoseLoadBridge] Subscribed to PoseSearchController.OnPoseSelected");
+                poseSearchController.OnPlayPoseEvent += OnPlayPose;
+                poseSearchController.OnPausePoseEvent += OnPausePose;
+                Debug.Log("[PoseLoadBridge] Subscribed to PoseSearchController events");
             }
             else
             {
@@ -50,6 +58,14 @@ namespace K4AdotNet.Samples.Unity
             {
                 Debug.LogWarning("[PoseLoadBridge] No SkeletonProviderFromJson found!");
             }
+
+            if (exerciseManager == null)
+            {
+                Debug.LogWarning("[PoseLoadBridge] No ExerciseManager found!");
+            }
+
+            // Initialize: disable player avatar tracking on start
+            SetPlayerAvatarTracking(false);
         }
 
         private void OnDestroy()
@@ -57,6 +73,8 @@ namespace K4AdotNet.Samples.Unity
             if (poseSearchController != null)
             {
                 poseSearchController.OnPoseSelected -= HandlePoseSelected;
+                poseSearchController.OnPlayPoseEvent -= OnPlayPose;
+                poseSearchController.OnPausePoseEvent -= OnPausePose;
             }
         }
 
@@ -92,6 +110,8 @@ namespace K4AdotNet.Samples.Unity
             {
                 string fileName = PoseService.GetPoseFileName(poseName);
                 skeletonProvider.LoadPoseFromJson(fileName);
+                exerciseManager.SetTargetSkeletonProvider(skeletonProvider);
+                exerciseManager.SetShowPoseSkeleton(true);
             }
             else
             {
@@ -117,6 +137,45 @@ namespace K4AdotNet.Samples.Unity
             {
                 skeletonProvider.ClearPose();
             }
+
+            if (exerciseManager != null)
+            {
+                exerciseManager.SetShowPoseSkeleton(false);
+            }
+
+            // Also disable player avatar tracking and reset verification
+            SetPlayerAvatarTracking(false);
+        }
+
+        /// <summary>
+        /// Enable or disable player avatar tracking for pose comparison.
+        /// </summary>
+        public void SetPlayerAvatarTracking(bool enabled)
+        {
+            Debug.Log($"[PoseLoadBridge] Setting player avatar tracking: {enabled}");
+
+            if (exerciseManager != null)
+            {
+                exerciseManager.SetShowAvatarSkeleton(enabled);
+            }
+        }
+
+        /// <summary>
+        /// Start playing the pose - enables player avatar tracking.
+        /// </summary>
+        public void OnPlayPose()
+        {
+            Debug.Log("[PoseLoadBridge] Play pose - enabling player avatar tracking");
+            SetPlayerAvatarTracking(true);
+        }
+
+        /// <summary>
+        /// Pause the pose tracking - disables player avatar tracking.
+        /// </summary>
+        public void OnPausePose()
+        {
+            Debug.Log("[PoseLoadBridge] Pause pose - disabling player avatar tracking");
+            SetPlayerAvatarTracking(false);
         }
     }
 }

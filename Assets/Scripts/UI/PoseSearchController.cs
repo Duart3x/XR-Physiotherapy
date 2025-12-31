@@ -58,6 +58,16 @@ namespace Physical.Therapy.UI
         /// </summary>
         public event Action<string> OnPoseSelected;
 
+        /// <summary>
+        /// Event fired when play pose tracking is triggered.
+        /// </summary>
+        public event Action OnPlayPoseEvent;
+
+        /// <summary>
+        /// Event fired when pause pose tracking is triggered.
+        /// </summary>
+        public event Action OnPausePoseEvent;
+
         // Internal tracking of pose cells
         private Dictionary<string, GameObject> poseCells = new Dictionary<string, GameObject>();
         private string currentSearchQuery = "";
@@ -539,7 +549,8 @@ namespace Physical.Therapy.UI
             enabledPlayPoseToggle.SetActive(false);
             pausePoseToggle.SetActive(true);
 
-            // Additional logic to turn on avatar tracking
+            // Fire event to enable avatar tracking
+            OnPlayPoseEvent?.Invoke();
         }
 
         public void OnPausePose()
@@ -550,7 +561,8 @@ namespace Physical.Therapy.UI
             enabledPlayPoseToggle.SetActive(true);
             pausePoseToggle.SetActive(false);
 
-            // Additional logic to pause avatar tracking
+            // Fire event to pause avatar tracking
+            OnPausePoseEvent?.Invoke();
         }
 
         # endregion Play Pause Pose

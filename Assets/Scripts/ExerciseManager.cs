@@ -12,7 +12,8 @@ namespace K4AdotNet.Samples.Unity
     {
         public SkeletonProvider userSkeletonProvider;
         public SkeletonProviderFromJson targetSkeletonProvider;
-        public SkeletonRenderer skeletonRenderer;
+        public SkeletonRenderer avatarSkeletonRenderer;
+        public SkeletonRenderer poseSkeletonRenderer;
         public Transform alignmentRoot; // Reference frame for drawing
         
         [Header("Visualization Settings")]
@@ -36,10 +37,10 @@ namespace K4AdotNet.Samples.Unity
             if (alignmentRoot == null && userSkeletonProvider != null)
                 alignmentRoot = userSkeletonProvider.transform.parent;
 
-            if (skeletonRenderer == null && userSkeletonProvider != null)
-                skeletonRenderer = userSkeletonProvider.GetComponentInChildren<SkeletonRenderer>();
-            if (skeletonRenderer == null)
-                skeletonRenderer = FindObjectOfType<SkeletonRenderer>();
+            if (avatarSkeletonRenderer == null && userSkeletonProvider != null)
+                avatarSkeletonRenderer = userSkeletonProvider.GetComponentInChildren<SkeletonRenderer>();
+            if (avatarSkeletonRenderer == null)
+                avatarSkeletonRenderer = FindObjectOfType<SkeletonRenderer>();
 
             if (userSkeletonProvider != null)
                 userSkeletonProvider.SkeletonUpdated += (s, e) => userSkeleton = e.Skeleton;
@@ -60,7 +61,7 @@ namespace K4AdotNet.Samples.Unity
 
         private void Update()
         {
-            if (userSkeleton.HasValue && targetSkeleton.HasValue && skeletonRenderer != null)
+            if (userSkeleton.HasValue && targetSkeleton.HasValue && avatarSkeletonRenderer != null)
             {
                 CheckPose(userSkeleton.Value, targetSkeleton.Value);
             }
@@ -88,13 +89,13 @@ namespace K4AdotNet.Samples.Unity
 
                 if (Vector3.Distance(userJointPos, idealPos) > errorThreshold) 
                 {
-                    skeletonRenderer.SetJointColor(joint, errorColor);
-                    skeletonRenderer.SetBoneColor(joint, errorColor);
+                    avatarSkeletonRenderer.SetJointColor(joint, errorColor);
+                    avatarSkeletonRenderer.SetBoneColor(joint, errorColor);
                 }
                 else
                 {
-                    skeletonRenderer.SetJointColor(joint, correctColor);
-                    skeletonRenderer.SetBoneColor(joint, correctColor);
+                    avatarSkeletonRenderer.SetJointColor(joint, correctColor);
+                    avatarSkeletonRenderer.SetBoneColor(joint, correctColor);
                 }
             }
         }
@@ -189,5 +190,36 @@ namespace K4AdotNet.Samples.Unity
 
         private Vector3 ConvertPos(Float3 p) => new Vector3(p.X, -p.Y, p.Z) * 0.001f;
         private UnityQuaternion ConvertRot(K4AQuaternion q) => UnityQuaternion.AngleAxis(180, Vector3.up) * new UnityQuaternion(q.X, q.Y, q.Z, q.W);
+
+        /// <summary>
+        /// Enable or disable static pose skeleton
+        /// </summary>
+        public void SetShowPoseSkeleton(bool enabled)
+        {
+            if (poseSkeletonRenderer != null)
+            {
+                poseSkeletonRenderer.SetActiveSkeleton(enabled);
+                Debug.Log($"[ExerciseManager] SetShowPoseSkeleton: {enabled}");
+            }
+        }
+
+        /// <summary>
+        /// Enable or disable pose comparison tracking
+        /// </summary>
+        public void SetShowAvatarSkeleton(bool enabled)
+        {
+            avatarSkeletonRenderer.ResetSkeletonMapping();
+            avatarSkeletonRenderer.SetActiveSkeleton(enabled);
+            Debug.Log($"[ExerciseManager] SetShowAvatarSkeleton: {enabled} with target skeleton provider {targetSkeletonProvider}");
+        }
+
+        /// <summary>
+        /// Set Target Skeleton Provider
+        /// </summary>
+        public void SetTargetSkeletonProvider(SkeletonProviderFromJson provider)
+        {
+            targetSkeletonProvider = provider;
+            Debug.Log($"[ExerciseManager] SetTargetSkeletonProvider: {provider}");
+        }
     }
 }

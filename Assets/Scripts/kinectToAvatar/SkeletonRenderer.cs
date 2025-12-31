@@ -173,11 +173,11 @@ namespace K4AdotNet.Samples.Unity
             if (skeletonProvider != null)
             {
                 skeletonProvider.SkeletonUpdated += SkeletonProvider_SkeletonUpdated;
-                Debug.Log($"[SkeletonRenderer] {gameObject.name} - Subscribed to SkeletonProvider on {(skeletonProvider as MonoBehaviour).gameObject.name}");
+                Debug.Log($"[SkeletonRenderer] {gameObject.name} - Subscribed to SkeletonProvider on {(skeletonProvider as MonoBehaviour).gameObject.name}, color: {skeletonColor}");
             }
             else
             {
-                Debug.LogWarning($"[SkeletonRenderer] {gameObject.name} - No ISkeletonProvider found in scene!");
+                Debug.LogWarning($"[SkeletonRenderer] {gameObject.name} - No ISkeletonProvider found in scene!, color: {skeletonColor}");
             }
         }
 
@@ -187,18 +187,15 @@ namespace K4AdotNet.Samples.Unity
             if (skeletonProvider != null)
             {
                 skeletonProvider.SkeletonUpdated -= SkeletonProvider_SkeletonUpdated;
-                Debug.Log($"[SkeletonRenderer] {gameObject.name} - Unsubscribed from SkeletonProvider");
+                Debug.Log($"[SkeletonRenderer] {gameObject.name} - Unsubscribed from SkeletonProvider, color: {skeletonColor}");
             }
         }
 
         private void SkeletonProvider_SkeletonUpdated(object sender, SkeletonEventArgs e)
         {
-            if (e.Skeleton == null)
+            if (_root.activeSelf && e.Skeleton != null)
             {
-                HideSkeleton();
-            }
-            else
-            {
+                Debug.Log($"[SkeletonRenderer] Rendering skeleton, color: {skeletonColor}");
                 RenderSkeleton(e.Skeleton.Value);
             }
         }
@@ -224,8 +221,6 @@ namespace K4AdotNet.Samples.Unity
             }
 
             PositionHead(skeleton, pelvisPos, yRotation180, offset);
-
-            _root.SetActive(true);
         }
 
         private static void PositionBone(Bone bone, Skeleton skeleton, Vector3 pelvisPos, bool yRotation180, Vector3 userOffset)
@@ -310,9 +305,22 @@ namespace K4AdotNet.Samples.Unity
             }
         }
 
-        private void HideSkeleton()
+        public void SetActiveSkeleton(bool active)
         {
-            _root.SetActive(false);
+            Debug.Log($"[SkeletonRenderer] Setting skeleton active: {active}, color: {skeletonColor}");
+            _root.SetActive(active);
         }
+
+        public void ResetSkeletonMapping()
+        {
+            // Reset joint and bone colors
+            Debug.Log($"[SkeletonRenderer] Resetting skeleton colors, color: {skeletonColor}");
+            foreach (var jt in JointTypes.All)
+            {
+                SetJointColor(jt, skeletonColor);
+                SetBoneColor(jt, skeletonColor);
+            }
+        }
+
     }
 }
