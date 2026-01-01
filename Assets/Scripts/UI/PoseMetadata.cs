@@ -69,6 +69,11 @@ namespace Physical.Therapy.UI
         /// </summary>
         public string SecondIconFileName { get; set; }
 
+        /// <summary>
+        /// Whether to apply 180-degree Y-axis rotation when rendering this pose
+        /// </summary>
+        public bool ApplyYRotation180 { get; set; }
+
         public PoseMetadata()
         {
             PoseName = "";
@@ -77,9 +82,10 @@ namespace Physical.Therapy.UI
             Description = "";
             IconFileName = "";
             SecondIconFileName = "";
+            ApplyYRotation180 = false;
         }
 
-        public PoseMetadata(string poseName, BodyArea bodyAreas, Difficulty difficulty, string description = "", string iconFileName = "", string secondIconFileName = "")
+        public PoseMetadata(string poseName, BodyArea bodyAreas, Difficulty difficulty, string description = "", string iconFileName = "", string secondIconFileName = "", bool applyYRotation180 = false)
         {
             PoseName = poseName;
             BodyAreas = bodyAreas;
@@ -87,6 +93,7 @@ namespace Physical.Therapy.UI
             Description = description;
             IconFileName = iconFileName;
             SecondIconFileName = secondIconFileName;
+            ApplyYRotation180 = applyYRotation180;
         }
 
         /// <summary>

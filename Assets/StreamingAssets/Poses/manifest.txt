@@ -3,18 +3,28 @@
 # This file is required for Android/Quest builds since we cannot enumerate files in StreamingAssets
 # Lines starting with # are comments
 #
-# FORMAT: filename.json | body_area1,body_area2 | difficulty | description
+# FORMAT: filename.json | icon1 | icon2 | body_area1,body_area2 | difficulty | description | flip_rotation
 #
 # Body Areas: Chest, Back, Arms, Abdominal, Legs, Shoulders
 # Difficulty: Easy, Medium, Hard (or 1, 2, 3)
+# Flip Rotation: true/false (whether to apply 180-degree Y-axis rotation to the pose)
 #
-# Example: warrior_pose.json | Legs,Abdominal | Medium | Standing balance pose that strengthens legs
+# Example: warrior_pose.json | person-yoga | person-yoga | Legs,Abdominal | Medium | Standing balance pose that strengthens legs | false
 #
 # Note: If you only provide the filename (old format), defaults will be used:
 #   - Body Area: None
 #   - Difficulty: Easy
+#   - Flip Rotation: false
 
-frontal_lunge_arms_up.json | Movement | person-yoga | Legs,Arms,Shoulders | Medium | Lunge position with arms raised over head
-guerreiro.json | person-yoga | person-yoga | Legs,Abdominal,Arms | Medium | Warrior pose for balance and strength
-gato.json | pose-icons | person-yoga |Abdominal,Back | Easy | Cat-cow stretch for spine flexibility
-aviao.json | person-yoga | person-yoga | Abdominal,Back,Arms | Hard | Airplane pose requiring balance and core stability
+# --- BEGIN OLD POSES ---
+# (flip values may be wrong)
+# frontal_lunge_arms_up.json | Movement | person-yoga | Legs,Arms,Shoulders | Medium | Lunge position with arms raised over head | false
+# gato.json | pose-icons | person-yoga | Back,Abdominal | Easy | Cat-cow stretch for spine flexibility | true
+# aviao.json | person-yoga | person-yoga | Legs,Back,Abdominal,Arms,Shoulders | Hard | Airplane pose requiring balance and core stability | true
+# --- END OLD POSES ---
+guerreiro.json | guerreiro | icons-gurreiro | Legs,Abdominal,Arms,Shoulders | Medium | Warrior pose for balance and strength | false
+chair_pose.json | chair_pose | icons-chair-pose | Legs,Back,Abdominal | Medium | Chair pose for leg and core strength | true
+forward_fold.json | forward_fold | icons-forward-fold | Back,Legs | Easy | Forward fold for hamstring and spine stretch | true
+goddess.json | goddess | icons-goddes | Legs,Arms,Shoulders | Medium | Goddess pose for lower body strength | true
+tree_pose.json | tree_pose | icon-tree-pose | Legs,Abdominal | Hard | Tree pose for balance and stability | true
+side_strech.json | side_strech | icons-side-strech | Legs,Abdominal | Medium | Tree pose for balance and stability | true

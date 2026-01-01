@@ -166,7 +166,7 @@ namespace Physical.Therapy.UI
 
         /// <summary>
         /// Parse manifest lines into PoseMetadata objects.
-        /// Format: filename.json | icon1 | icon2 | body_areas | difficulty | description
+        /// Format: filename.json | icon1 | icon2 | body_areas | difficulty | description | flip_rotation
         /// </summary>
         private void ParseManifestLines(string[] lines)
         {
@@ -190,12 +190,13 @@ namespace Physical.Therapy.UI
                     continue;
 
                 // Parse based on number of parts
-                // Format: filename.json | icon1 | icon2 | body_areas | difficulty | description
+                // Format: filename.json | icon1 | icon2 | body_areas | difficulty | description | flip_rotation
                 string iconFileName = "";
                 string secondIconFileName = "";
                 BodyArea bodyAreas = BodyArea.None;
                 Difficulty difficulty = Difficulty.Easy;
                 string description = "";
+                bool applyYRotation180 = false;
 
                 if (parts.Length >= 2)
                 {
@@ -217,9 +218,14 @@ namespace Physical.Therapy.UI
                 {
                     description = parts[5].Trim();
                 }
+                if (parts.Length >= 7)
+                {
+                    string flipValue = parts[6].Trim().ToLower();
+                    applyYRotation180 = flipValue == "true" || flipValue == "1" || flipValue == "yes";
+                }
 
-                AvailablePoses.Add(new PoseMetadata(poseName, bodyAreas, difficulty, description, iconFileName, secondIconFileName));
-                Debug.Log($"[PoseService] Loaded pose: {poseName}, Icon1: {iconFileName}, Icon2: {secondIconFileName}, Areas: {bodyAreas}, Difficulty: {difficulty}");
+                AvailablePoses.Add(new PoseMetadata(poseName, bodyAreas, difficulty, description, iconFileName, secondIconFileName, applyYRotation180));
+                Debug.Log($"[PoseService] Loaded pose: {poseName}, Icon1: {iconFileName}, Icon2: {secondIconFileName}, Areas: {bodyAreas}, Difficulty: {difficulty}, Flip: {applyYRotation180}");
             }
         }
 

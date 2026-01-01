@@ -23,6 +23,9 @@ namespace K4AdotNet.Samples.Unity
         [Tooltip("The ExerciseManager for pose verification and avatar control")]
         public ExerciseManager exerciseManager;
 
+        [Tooltip("The PoseService that provides pose metadata")]
+        public PoseService poseService;
+
         [Header("Settings")]
         [Tooltip("Automatically find references if not assigned")]
         public bool autoFindReferences = true;
@@ -39,6 +42,9 @@ namespace K4AdotNet.Samples.Unity
 
                 if (exerciseManager == null)
                     exerciseManager = FindObjectOfType<ExerciseManager>();
+
+                if (poseService == null)
+                    poseService = FindObjectOfType<PoseService>();
             }
 
             // Subscribe to UI events
@@ -62,6 +68,11 @@ namespace K4AdotNet.Samples.Unity
             if (exerciseManager == null)
             {
                 Debug.LogWarning("[PoseLoadBridge] No ExerciseManager found!");
+            }
+
+            if (poseService == null)
+            {
+                Debug.LogWarning("[PoseLoadBridge] No PoseService found!");
             }
 
             // Initialize: disable player avatar tracking on start
@@ -112,6 +123,22 @@ namespace K4AdotNet.Samples.Unity
                 skeletonProvider.LoadPoseFromJson(fileName);
                 exerciseManager.SetTargetSkeletonProvider(skeletonProvider);
                 exerciseManager.SetShowPoseSkeleton(true);
+
+                // Apply Y rotation to both skeleton GameObjects based on pose metadata
+                if (poseService != null)
+                {
+                    PoseMetadata metadata = poseService.GetPoseByName(poseName);
+                    if (metadata != null)
+                    {
+                        ApplyRotationToSkeletons(metadata.ApplyYRotation180);
+                        Debug.Log($"[PoseLoadBridge] Applied rotation = {metadata.ApplyYRotation180} for pose: {poseName}");
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"[PoseLoadBridge] Could not find metadata for pose: {poseName}");
+                        ApplyRotationToSkeletons(false);
+                    }
+                }
             }
             else
             {
@@ -143,8 +170,26 @@ namespace K4AdotNet.Samples.Unity
                 exerciseManager.SetShowPoseSkeleton(false);
             }
 
+            // Reset rotation to default (0 degrees)
+            ApplyRotationToSkeletons(false);
+
             // Also disable player avatar tracking and reset verification
             SetPlayerAvatarTracking(false);
+        }
+
+        /// <summary>
+        /// Apply Y-axis 180-degree rotation to the target pose skeleton.
+        /// </summary>
+        private void ApplyRotationToSkeletons(bool applyRotation)
+        {
+            float yRotation = applyRotation ? 180f : 0f;
+
+            // Rotate the target pose skeleton provider
+            if (skeletonProvider != null)
+            {
+                skeletonProvider.transform.localRotation = UnityEngine.Quaternion.Euler(0, yRotation, 0);
+                Debug.Log($"[PoseLoadBridge] Set target skeleton rotation Y={yRotation}");
+            }
         }
 
         /// <summary>
