@@ -10,7 +10,7 @@ namespace K4AdotNet.Samples.Unity
     /// This allows multiple avatars to load different poses from different files.
     /// Uses the shared SkeletonData structures from SkeletonData.cs
     /// </summary>
-    public class SkeletonProviderFromJson : MonoBehaviour
+    public class SkeletonProviderFromJson : MonoBehaviour, ISkeletonProvider
     {
         [Header("JSON File Settings")]
         [Tooltip("Name of the JSON file in the Poses folder (e.g., 'frontal_lunge_arms_up.json')")]
@@ -24,12 +24,16 @@ namespace K4AdotNet.Samples.Unity
 
         private Skeleton? _currentSkeleton;
         private bool _isLoaded = false;
+        private string _currentPoseFileName = "";
 
         void Start()
         {
             if (loadOnStart)
             {
                 LoadPoseFromJson();
+            } else
+            {
+                ClearPose();
             }
         }
 
@@ -98,6 +102,7 @@ namespace K4AdotNet.Samples.Unity
                 Skeleton skeleton = ConvertToSkeleton(skeletonData);
                 _currentSkeleton = skeleton;
                 _isLoaded = true;
+                _currentPoseFileName = fileName;
 
                 // Trigger the event to notify CharacterAnimator
                 OnSkeletonUpdated(skeleton);
@@ -148,6 +153,7 @@ namespace K4AdotNet.Samples.Unity
         {
             _currentSkeleton = null;
             _isLoaded = false;
+            _currentPoseFileName = "";
             SkeletonUpdated?.Invoke(this, new SkeletonEventArgs(null));
             Debug.Log("[SkeletonProviderFromJson] Pose cleared");
         }
@@ -161,5 +167,10 @@ namespace K4AdotNet.Samples.Unity
         /// Get the current skeleton
         /// </summary>
         public Skeleton? CurrentSkeleton => _currentSkeleton;
+
+        /// <summary>
+        /// Get the filename of the currently loaded pose
+        /// </summary>
+        public string CurrentPoseFileName => _currentPoseFileName;
     }
 }

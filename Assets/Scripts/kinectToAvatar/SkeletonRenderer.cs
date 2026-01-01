@@ -8,6 +8,10 @@ namespace K4AdotNet.Samples.Unity
 {
     public class SkeletonRenderer : MonoBehaviour
     {
+        public Color skeletonColor = new Color(0.6f, 0.8f, 1f, 1f);
+        public bool yRotation180 = false;
+        public Vector3 offset = Vector3.zero;
+
         private void Awake()
         {
             Debug.Log("[SkeletonRenderer] Awake");
@@ -17,6 +21,10 @@ namespace K4AdotNet.Samples.Unity
             _root.transform.localScale = Vector3.one;
             _root.transform.localPosition = Vector3.zero;
             _root.SetActive(false);
+
+            // Find a safe shader for URP/Built-in that supports color
+            _shader = Shader.Find("Sprites/Default");
+            if (_shader == null) _shader = Shader.Find("Universal Render Pipeline/Unlit");
 
             CreateJoints();
             CreateBones();
@@ -29,15 +37,16 @@ namespace K4AdotNet.Samples.Unity
         private IReadOnlyDictionary<JointType, Transform> _joints;
         private IReadOnlyCollection<Bone> _bones;
         private Transform _head;
+        private Shader _shader;
 
         private class Bone
         {
-            public static Bone FromChildJoint(JointType childJoint)
+            public static Bone FromChildJoint(JointType childJoint, Shader shader)
             {
-                return new Bone(childJoint.GetParent(), childJoint);
+                return new Bone(childJoint.GetParent(), childJoint, shader);
             }
 
-            public Bone(JointType parentJoint, JointType childJoint)
+            public Bone(JointType parentJoint, JointType childJoint, Shader shader)
             {
                 ParentJoint = parentJoint;
                 ChildJoint = childJoint;
@@ -50,6 +59,11 @@ namespace K4AdotNet.Samples.Unity
                 bone.transform.parent = pos.transform;
                 bone.transform.localScale = new Vector3(0.033f, 0.5f, 0.033f);
                 bone.transform.localPosition = 0.5f * Vector3.up;
+
+                if (shader != null)
+                {
+                    bone.GetComponent<Renderer>().material = new Material(shader);
+                }
 
                 Transform = pos.transform;
             }
@@ -71,20 +85,24 @@ namespace K4AdotNet.Samples.Unity
                         joint.name = jt.ToString();
                         joint.transform.parent = _root.transform;
                         joint.transform.localScale = 0.075f * Vector3.one;
+                        
+                        if (_shader != null)
+                        {
+                            joint.GetComponent<Renderer>().material = new Material(_shader);
+                        }
+
                         return joint.transform;
                     });
 
-            // Set green as default color
-            SetJointColor(Color.green, typeof(JointType).GetEnumValues().Cast<JointType>().ToArray());
+            // Set default color
+            SetJointColor(skeletonColor, typeof(JointType).GetEnumValues().Cast<JointType>().ToArray());
 
             // Set slightly decreased size for some joints
             SetJointScale(0.05f, JointType.Neck, JointType.Head, JointType.ClavicleLeft, JointType.ClavicleRight, JointType.EarLeft, JointType.EarRight);
 
-            // Set greatly decreased size and specific colors for face joints
+            // Set greatly decreased size for face joints
             SetJointScale(0.033f, JointType.EyeLeft, JointType.EyeRight, JointType.Nose);
-            SetJointColor(Color.cyan, JointType.EyeLeft, JointType.EyeRight);
-            SetJointColor(Color.magenta, JointType.Nose);
-            SetJointColor(Color.yellow, JointType.EarLeft, JointType.EarRight);
+            // Colors are now uniform
         }
 
         private void SetJointScale(float scale, params JointType[] jointTypes)
@@ -118,21 +136,28 @@ namespace K4AdotNet.Samples.Unity
             foreach (var b in _bones)
             {
                 b.Transform.parent = _root.transform;
+                // Set color for bones
+                 var renderer = b.Transform.GetChild(0).GetComponent<Renderer>();
+                 if (renderer != null) renderer.material.color = skeletonColor;
             }
         }
 
-        private static void CreateBones(ICollection<Bone> list, params JointType[] childJoints)
+        private void CreateBones(ICollection<Bone> list, params JointType[] childJoints)
         {
             foreach (var joint in childJoints)
             {
-                list.Add(Bone.FromChildJoint(joint));
+                list.Add(Bone.FromChildJoint(joint, _shader));
             }
         }
 
         private void CreateHead()
         {
             var head = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            head.GetComponent<Renderer>().material.color = new Color(0.8f, 0.8f, 0.8f);
+            if (_shader != null)
+            {
+                head.GetComponent<Renderer>().material = new Material(_shader);
+            }
+            head.GetComponent<Renderer>().material.color = skeletonColor;
             head.transform.parent = _root.transform;
 
             _head = head.transform;
@@ -143,72 +168,97 @@ namespace K4AdotNet.Samples.Unity
         private void OnEnable()
         {
             // Find the single SkeletonProvider in the scene (for live tracking)
-            var skeletonProvider = GetComponentInParent<SkeletonProvider>();
+            var skeletonProvider = GetComponentInParent<ISkeletonProvider>();
             
             if (skeletonProvider != null)
             {
                 skeletonProvider.SkeletonUpdated += SkeletonProvider_SkeletonUpdated;
-                Debug.Log($"[SkeletonRenderer] {gameObject.name} - Subscribed to SkeletonProvider on {skeletonProvider.gameObject.name}");
+                Debug.Log($"[SkeletonRenderer] {gameObject.name} - Subscribed to SkeletonProvider on {(skeletonProvider as MonoBehaviour).gameObject.name}, color: {skeletonColor}");
             }
             else
             {
-                Debug.LogWarning($"[SkeletonRenderer] {gameObject.name} - No SkeletonProvider found in scene!");
+                Debug.LogWarning($"[SkeletonRenderer] {gameObject.name} - No ISkeletonProvider found in scene!, color: {skeletonColor}");
             }
         }
 
         private void OnDisable()
         {
-            var skeletonProvider = GetComponentInParent<SkeletonProvider>();
+            var skeletonProvider = GetComponentInParent<ISkeletonProvider>();
             if (skeletonProvider != null)
             {
                 skeletonProvider.SkeletonUpdated -= SkeletonProvider_SkeletonUpdated;
-                Debug.Log($"[SkeletonRenderer] {gameObject.name} - Unsubscribed from SkeletonProvider");
+                Debug.Log($"[SkeletonRenderer] {gameObject.name} - Unsubscribed from SkeletonProvider, color: {skeletonColor}");
             }
         }
 
         private void SkeletonProvider_SkeletonUpdated(object sender, SkeletonEventArgs e)
         {
-            if (e.Skeleton == null)
+            if (_root.activeSelf && e.Skeleton != null)
             {
-                HideSkeleton();
-            }
-            else
-            {
+                Debug.Log($"[SkeletonRenderer] Rendering skeleton, color: {skeletonColor}");
                 RenderSkeleton(e.Skeleton.Value);
             }
         }
 
         private void RenderSkeleton(Skeleton skeleton)
         {
+            // Calculate offset to anchor the skeleton to the Pelvis (making Pelvis local (0,0,0))
+            // This prevents the skeleton from moving around the space when the user walks,
+            // keeping it aligned ("directly above") the Avatar.
+            var pelvisPos = ConvertKinectPos(skeleton[JointType.Pelvis].PositionMm);
+            if (yRotation180) pelvisPos = UnityEngine.Quaternion.Euler(0, 180, 0) * pelvisPos;
+
             foreach (var item in _joints)
             {
-                item.Value.localPosition = ConvertKinectPos(skeleton[item.Key].PositionMm);
+                var pos = ConvertKinectPos(skeleton[item.Key].PositionMm);
+                if (yRotation180) pos = UnityEngine.Quaternion.Euler(0, 180, 0) * pos;
+                item.Value.localPosition = (pos - pelvisPos) + offset;
             }
 
             foreach (var bone in _bones)
             {
-                PositionBone(bone, skeleton);
+                PositionBone(bone, skeleton, pelvisPos, yRotation180, offset);
             }
 
-            PositionHead(skeleton);
-
-            _root.SetActive(true);
+            PositionHead(skeleton, pelvisPos, yRotation180, offset);
         }
 
-        private static void PositionBone(Bone bone, Skeleton skeleton)
+        private static void PositionBone(Bone bone, Skeleton skeleton, Vector3 pelvisPos, bool yRotation180, Vector3 userOffset)
         {
-            var parentPos = ConvertKinectPos(skeleton[bone.ParentJoint].PositionMm);
-            var direction = ConvertKinectPos(skeleton[bone.ChildJoint].PositionMm) - parentPos;
+            var parentPosRaw = ConvertKinectPos(skeleton[bone.ParentJoint].PositionMm);
+            var childPosRaw = ConvertKinectPos(skeleton[bone.ChildJoint].PositionMm);
+
+            if (yRotation180)
+            {
+                parentPosRaw = UnityEngine.Quaternion.Euler(0, 180, 0) * parentPosRaw;
+                childPosRaw = UnityEngine.Quaternion.Euler(0, 180, 0) * childPosRaw;
+            }
+
+            var parentPos = (parentPosRaw - pelvisPos) + userOffset;
+            var direction = ((childPosRaw - pelvisPos) + userOffset) - parentPos;
+            
             bone.Transform.localPosition = parentPos;
             bone.Transform.localScale = new Vector3(1, direction.magnitude, 1);
             bone.Transform.localRotation = UnityEngine.Quaternion.FromToRotation(Vector3.up, direction);
         }
 
-        private void PositionHead(Skeleton skeleton)
+        private void PositionHead(Skeleton skeleton, Vector3 pelvisPos, bool yRotation180, Vector3 userOffset)
         {
-            var headPos = ConvertKinectPos(skeleton[JointType.Head].PositionMm);
-            var earPosR = ConvertKinectPos(skeleton[JointType.EarRight].PositionMm);
-            var earPosL = ConvertKinectPos(skeleton[JointType.EarLeft].PositionMm);
+            var headPosRaw = ConvertKinectPos(skeleton[JointType.Head].PositionMm);
+            var earPosRRaw = ConvertKinectPos(skeleton[JointType.EarRight].PositionMm);
+            var earPosLRaw = ConvertKinectPos(skeleton[JointType.EarLeft].PositionMm);
+
+            if (yRotation180)
+            {
+                headPosRaw = UnityEngine.Quaternion.Euler(0, 180, 0) * headPosRaw;
+                earPosRRaw = UnityEngine.Quaternion.Euler(0, 180, 0) * earPosRRaw;
+                earPosLRaw = UnityEngine.Quaternion.Euler(0, 180, 0) * earPosLRaw;
+            }
+
+            var headPos = (headPosRaw - pelvisPos) + userOffset;
+            var earPosR = (earPosRRaw - pelvisPos) + userOffset;
+            var earPosL = (earPosLRaw - pelvisPos) + userOffset;
+
             var headCenter = 0.5f * (earPosR + earPosL);
             var d = (earPosR - earPosL).magnitude;
             _head.localPosition = headCenter;
@@ -226,9 +276,51 @@ namespace K4AdotNet.Samples.Unity
             return 0.001f * new Vector3(pos.X, -pos.Y, pos.Z);
         }
 
-        private void HideSkeleton()
+        public void SetJointColor(JointType joint, Color color)
         {
-            _root.SetActive(false);
+            if (_joints != null && _joints.ContainsKey(joint))
+            {
+                var renderer = _joints[joint].GetComponent<Renderer>();
+                if (renderer != null)
+                {
+                    renderer.material.color = color;
+                }
+            }
         }
+
+        public void SetBoneColor(JointType childJoint, Color color)
+        {
+            if (_bones != null)
+            {
+                var bone = _bones.FirstOrDefault(b => b.ChildJoint == childJoint);
+                if (bone != null)
+                {
+                    // The bone geometry (Cylinder) is the child of the bone Transform
+                    var renderer = bone.Transform.GetChild(0).GetComponent<Renderer>();
+                    if (renderer != null)
+                    {
+                        renderer.material.color = color;
+                    }
+                }
+            }
+        }
+
+        public void SetActiveSkeleton(bool active)
+        {
+            Debug.Log($"[SkeletonRenderer] Setting skeleton active: {active}, color: {skeletonColor}");
+            _root.SetActive(active);
+        }
+
+        public void ResetSkeletonMapping()
+        {
+            // Reset joint and bone colors
+            Debug.Log($"[SkeletonRenderer] Resetting skeleton colors, color: {skeletonColor}");
+            foreach (var jt in JointTypes.All)
+            {
+                SetJointColor(jt, skeletonColor);
+                SetBoneColor(jt, skeletonColor);
+            }
+        }
+
     }
 }
